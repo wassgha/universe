@@ -25,17 +25,17 @@ const nextServerRemote = (remoteObject) => {
 };
 
 const withModuleFederation = (config, options, mfConfig) => {
-  config.experiments = { topLevelAwait: true };
+  config.experiments = {topLevelAwait: true};
   if (!options.isServer) {
     config.output.uniqueName = mfConfig.name;
     Object.assign(config.resolve.alias, {
       react$: require.resolve("./react.js"),
       "react-dom$": require.resolve("./react-dom.js"),
       "../next-server/lib/router-context": require.resolve(
-        "./next_router_context.js"
+          "./next_router_context.js"
       ),
       "../next-server/lib/head-manager-context": require.resolve(
-        "./head-manager-context.js"
+          "./head-manager-context.js"
       ),
     });
   } else {
@@ -43,10 +43,10 @@ const withModuleFederation = (config, options, mfConfig) => {
       // react$: require.resolve("./react.js"),
       "react-dom/server$": require.resolve("./react-dom.js"),
       "../next-server/lib/router-context": require.resolve(
-        "./next_router_context.js"
+          "./next_router_context.js"
       ),
       "../next-server/lib/head-manager-context": require.resolve(
-        "./head-manager-context.js"
+          "./head-manager-context.js"
       ),
     });
     config.externals.unshift({
@@ -60,27 +60,45 @@ const withModuleFederation = (config, options, mfConfig) => {
   const federationConfig = {
     name: mfConfig.name,
     library: mfConfig.library
-      ? mfConfig.library
-      : { type: config.output.libraryTarget, name: mfConfig.name },
+        ? mfConfig.library
+        : {type: config.output.libraryTarget, name: mfConfig.name},
     filename: mfConfig.filename || "static/runtime/remoteEntry.js",
     remotes: options.isServer
-      ? nextServerRemote(mfConfig.remotes)
-      : mfConfig.remotes,
+        ? nextServerRemote(mfConfig.remotes)
+        : mfConfig.remotes,
     exposes: mfConfig.exposes,
-    shared: mfConfig.shared,
+    shared: [],
   };
-
+  federationConfig.shared.push({
+    react: {
+      shareKey: "react",
+      singleton: true,
+      requiredVersion: require("react").version,
+      version: require("react").version,
+      eager: true,
+    },
+    "react-dom": {
+      shareKey: "react-dom",
+      singleton: true,
+      requiredVersion: require("react-dom").version,
+      version: require("react-dom").version,
+      eager: true,
+    }
+  })
+  if(Array.isArray(mfConfig.shared)) {
+    federationConfig.shared.push(...mfConfig.shared)
+  }
   config.plugins.push(
-    new options.webpack.container.ModuleFederationPlugin(federationConfig)
+      new options.webpack.container.ModuleFederationPlugin(federationConfig)
   );
   if (mfConfig.mergeRuntime) {
     config.plugins.push(new MergeRuntime(federationConfig));
   }
   config.plugins.push(
-    new DeifnePlugin({
-      __CURRENT_HOST__: JSON.stringify(mfConfig.name),
-      __LISTED_REMOTES__: JSON.stringify(Object.keys(federationConfig.remotes)),
-    })
+      new DeifnePlugin({
+        __CURRENT_HOST__: JSON.stringify(mfConfig.name),
+        __LISTED_REMOTES__: JSON.stringify(Object.keys(federationConfig.remotes)),
+      })
   );
 };
 module.exports = withModuleFederation;

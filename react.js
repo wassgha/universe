@@ -4,7 +4,10 @@ if (global.React) {
 } else if (process.browser && window.React) {
   module.exports = window.React;
 } else if (process.browser) {
-  window.React = process.env.NODE_ENV === 'development' ? require('react/umd/react.development.js') : require("react/umd/react.production.min.js");
+  window.React =
+    process.env.NODE_ENV === "development"
+      ? require("react/umd/react.development.js")
+      : require("react/umd/react.production.min.js");
   module.exports = window.React;
 } else {
   console.log("loading fresh react");

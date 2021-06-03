@@ -1,7 +1,7 @@
 if (global.HeadManagerContext) {
   module.exports = global.HeadManagerContext;
 } else if (process.browser && window.HeadManagerContext) {
-  consol.log('its here')
+  consol.log("its here");
   module.exports = window.HeadManagerContext;
 } else if (process.browser) {
   window.HeadManagerContext = require("next/dist/next-server/lib/head-manager-context.js");
