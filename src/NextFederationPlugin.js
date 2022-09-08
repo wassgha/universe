@@ -9,6 +9,7 @@ import mv from 'mv';
 import path from 'path';
 import { injectRuleLoader, hasLoader } from './loaders/helpers';
 import { exposeNextjsPages } from './loaders/nextPageMapLoader';
+import { exposeChunkMap } from './loaders/exposedChunkMapLoader';
 import {
   reKeyHostShared,
   DEFAULT_SHARE_SCOPE,
@@ -203,6 +204,7 @@ class ChildFederation {
         filename: computeRemoteFilename(isServer, this._options.filename),
         exposes: {
           ...this._options.exposes,
+          ...exposeChunkMap(),
           ...(this._extraOptions.exposePages
             ? exposeNextjsPages(compiler.options.context)
             : {}),
@@ -286,6 +288,10 @@ class ChildFederation {
         return p.constructor.name === 'NextMiniCssExtractPlugin';
       });
 
+      const ReactLoadable = childCompiler.options.plugins.find((p) => {
+        return p.constructor.name === 'ReactLoadablePlugin';
+      });
+
       const removePlugins = [
         'NextJsRequireCacheHotReloader',
         'BuildManifestPlugin',
@@ -298,6 +304,7 @@ class ChildFederation {
         'ProfilingPlugin',
         'DropClientPage',
         'ReactFreshWebpackPlugin',
+        'ReactLoadablePlugin',
       ];
 
       childCompiler.options.plugins = childCompiler.options.plugins.filter(
@@ -312,6 +319,15 @@ class ChildFederation {
             '.css',
             '-fed.css'
           ),
+        }).apply(childCompiler);
+      }
+
+      if(ReactLoadable) {
+        console.log(ReactLoadable.filename)
+        new ReactLoadable.constructor({
+          // grab options from loadable
+          ...ReactLoadable,
+          filename: ReactLoadable.filename.replace('.json', '-fed.json'),
         }).apply(childCompiler);
       }
 
