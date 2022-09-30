@@ -177,9 +177,9 @@ class ChildFederationPlugin {
   apply(compiler) {
     const webpack = compiler.webpack;
     const LibraryPlugin = webpack.library.EnableLibraryPlugin;
-    const ContainerPlugin = webpack.container.ContainerPlugin;
     const LoaderTargetPlugin = webpack.LoaderTargetPlugin;
     const library = compiler.options.output.library;
+    const isDev = compiler.options.mode === 'development';
 
     compiler.hooks.thisCompilation.tap(CHILD_PLUGIN_NAME, (compilation) => {
       const buildName = this._options.name;
@@ -194,11 +194,11 @@ class ChildFederationPlugin {
         },
         chunkFilename: compiler.options.output.chunkFilename.replace(
           '.js',
-          '-fed.js'
+          isDev ? '-fed.js' : '[contenthash]-fed.js'
         ),
         filename: compiler.options.output.chunkFilename.replace(
           '.js',
-          '-fed.js'
+          isDev ? '-fed.js' : '[contenthash]-fed.js'
         ),
       };
       const externalizedShares = Object.entries(DEFAULT_SHARE_SCOPE).reduce(
