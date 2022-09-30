@@ -30,6 +30,11 @@ export class MFClient {
   /** Original nextjs PageLoader which passed by `patchNextClientPageLoader.js` */
   private _nextPageLoader: PageLoader;
 
+  get webpackSharedScope() {
+    // @ts-expect-error can be undefined
+    return __webpack_share_scopes__;
+  }
+
   constructor(nextPageLoader: PageLoader, opts: MFClientOptions) {
     this._nextPageLoader = nextPageLoader;
     this.events = new EventEmitter<EventTypes>();
