@@ -212,6 +212,25 @@ class ChildFederationPlugin {
         },
         {}
       );
+
+      // add `import: false` option if some of packages has `singleton: true` & `requiredVersion: false`
+      // such packages should not override host packages
+      const sharesFromOpts = Object.entries({ ...this._options.shared }).reduce(
+        (acc, [key, opts]) => {
+          if (
+            typeof opts === 'object' &&
+            opts.singleton === true &&
+            opts.requiredVersion === false
+          ) {
+            acc[key] = { ...opts, import: false };
+          } else {
+            acc[key] = opts;
+          }
+          return acc;
+        },
+        {}
+      );
+
       const childCompiler = compilation.createChildCompiler(
         CHILD_PLUGIN_NAME,
         childOutput,
@@ -230,7 +249,7 @@ class ChildFederationPlugin {
               ...(this._extraOptions.skipSharingNextInternals
                 ? {}
                 : externalizedShares),
-              ...this._options.shared,
+              ...sharesFromOpts,
             },
           }),
           new webpack.web.JsonpTemplatePlugin(childOutput),

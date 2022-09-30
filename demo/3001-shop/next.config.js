@@ -18,7 +18,12 @@ module.exports = {
             './WebpackSvg': './components/WebpackSvg.js',
             './WebpackPng': './components/WebpackPng.js',
           },
-          shared: {},
+          shared: {
+            antd: {
+              singleton: true,
+              // requiredVersion: false,
+            },
+          },
           extraOptions: {
             exposePages: true,
             enableImageLoaderFix: true,

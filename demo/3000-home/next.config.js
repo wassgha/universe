@@ -16,7 +16,12 @@ module.exports = {
           exposes: {
             './SharedNav': './components/SharedNav.js',
           },
-          shared: {},
+          shared: {
+            antd: {
+              singleton: true,
+              // requiredVersion: false,
+            },
+          },
           extraOptions: {
             exposePages: true,
             enableImageLoaderFix: true,
