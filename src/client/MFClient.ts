@@ -119,6 +119,7 @@ export class MFClient {
 
     const routeLoader =
       nextPageLoader.routeLoader as PageLoader['routeLoader'] & {
+        // eslint-disable-next-line @typescript-eslint/ban-types
         _loadRouteOriginal: Function;
       };
 
@@ -164,6 +165,7 @@ export class MFClient {
 
     const routeLoader =
       nextPageLoader.routeLoader as PageLoader['routeLoader'] & {
+        // eslint-disable-next-line @typescript-eslint/ban-types
         _whenEntrypointOriginal: Function;
       };
 
@@ -175,7 +177,7 @@ export class MFClient {
 
     // replace routeLoader.whenEntrypoint logic
     routeLoader.whenEntrypoint = async (route: string) => {
-      if (route === '/_error') {
+      if (route === '/_error' || route === '/404') {
         try {
           let route = await this.pathnameToRoute(window.location.pathname);
           if (!route) {
