@@ -47,12 +47,12 @@ export class MFClient {
       this.remotePages.addRoutes(cfg[remoteStr], remote);
     });
 
-    this.combinedPages = new CombinedPages(
-      (this._nextPageLoader as any)._getPageListOriginal.bind(
-        this._nextPageLoader
-      ),
-      this.remotePages
-    );
+    const localPagesGetter = (
+      this._nextPageLoader as any
+    )._getPageListOriginal.bind(this._nextPageLoader);
+    this.combinedPages = new CombinedPages(localPagesGetter, this.remotePages);
+    // pre-cache new page list (it helps to fix falsy calls of useMFClient({ onRemoteChange }) callback)
+    this.combinedPages.getPageList().catch(() => {});
 
     this._wrapLoadRoute(nextPageLoader);
     this._wrapWhenEntrypoint(nextPageLoader);
@@ -78,6 +78,10 @@ export class MFClient {
    * PS. This method is used by DevHmrFixInvalidPongPlugin (fix HMR page reloads in dev mode)
    */
   isFederatedPathname(cleanPathname: string): boolean {
+    if (this.combinedPages.localPagesCache?.includes(cleanPathname)) {
+      return false;
+    }
+
     return !!this.remotePages.routeToRemote(cleanPathname);
   }
 

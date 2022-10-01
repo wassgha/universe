@@ -9,7 +9,7 @@ export class CombinedPages {
   private sortedPageCache: string[];
 
   /** List of pages that belongs to the current host application */
-  private localPagesCache: string[];
+  public localPagesCache: string[];
   /** List of known remote pages this list might be extent during runtime */
   private remotePagesCache: string[];
   /** Nextjs getter which obtained from patchNextClientPageLoader */
