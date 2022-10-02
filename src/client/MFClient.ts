@@ -56,6 +56,9 @@ export class MFClient {
 
     this._wrapLoadRoute(nextPageLoader);
     this._wrapWhenEntrypoint(nextPageLoader);
+
+    // @ts-expect-error this method
+    __webpack_init_sharing__('default');
   }
 
   /**
