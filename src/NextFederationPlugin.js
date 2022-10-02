@@ -387,10 +387,12 @@ function extractUrlAndGlobal(urlAndGlobal) {
 
 function generateRemoteTemplate(url, global) {
   return `promise new Promise(function (resolve, reject) {
+    var url = new URL(${JSON.stringify(url)});
+    url.searchParams.set('t', Date.now());
     var __webpack_error__ = new Error();
     if (typeof ${global} !== 'undefined') return resolve();
     __webpack_require__.l(
-      ${JSON.stringify(url)},
+      url.href,
       function (event) {
         if (typeof ${global} !== 'undefined') return resolve();
         var errorType = event && (event.type === 'load' ? 'missing' : event.type);
