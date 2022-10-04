@@ -28,6 +28,7 @@ module.exports = {
             enableImageLoaderFix: true,
             enableUrlLoaderFix: true,
             automaticPageStitching: true,
+            disableInDevMode: false,
           },
         })
       );

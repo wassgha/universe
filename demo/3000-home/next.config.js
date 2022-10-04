@@ -28,6 +28,7 @@ module.exports = {
             enableUrlLoaderFix: true,
             skipSharingNextInternals: false,
             automaticPageStitching: true,
+            disableInDevMode: false,
           },
         })
       );

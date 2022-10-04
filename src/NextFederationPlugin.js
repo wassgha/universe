@@ -490,6 +490,8 @@ class NextFederationPlugin {
    * @returns {void}
    */
   apply(compiler) {
+    const isDev = compiler.options.mode === 'development';
+
     if (this._extraOptions.automaticPageStitching) {
       compiler.options.module.rules.push({
         test: /next[\\/]dist[\\/]client[\\/]page-loader\.js$/,
@@ -535,11 +537,13 @@ class NextFederationPlugin {
       'process.env.REMOTES': createRuntimeVariables(this._options.remotes),
       'process.env.CURRENT_HOST': JSON.stringify(this._options.name),
     }).apply(compiler);
-    new ChildFederationPlugin(this._options, this._extraOptions).apply(
-      compiler
-    );
+    if (!(isDev && this._extraOptions.disableInDevMode)) {
+      new ChildFederationPlugin(this._options, this._extraOptions).apply(
+        compiler
+      );
+    }
     new AddRuntimeRequirementToPromiseExternal().apply(compiler);
-    if (compiler.options.mode === 'development') {
+    if (isDev) {
       new DevHmrFixInvalidPongPlugin().apply(compiler);
     }
   }
