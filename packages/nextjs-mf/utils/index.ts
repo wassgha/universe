@@ -15,17 +15,16 @@ export const revalidate = () => {
   })
 }
 
-
 export const FlushedChunksHead = (props: { chunks: string[]; }) => {
   const chunks = props.chunks || [];
-  const scripts = chunks.filter((c) => c.endsWith('.js')).map((chunk) => {
+  const scripts = chunks.filter((c) => c && c.endsWith('.js')).map((chunk) => {
     return /*#__PURE__*/createElement("script", {
       key: chunk,
       src: chunk,
       async: true
     });
   });
-  const css = chunks.filter((c) => c.endsWith('.css')).map((chunk) => {
+  const css = chunks.filter((c) => c && c.endsWith('.css')).map((chunk) => {
     return /*#__PURE__*/createElement("link", {
       key: chunk,
       href: chunk,
