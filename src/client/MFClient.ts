@@ -47,6 +47,9 @@ export class MFClient {
   }
 
   constructor(nextPageLoader: PageLoader, opts: MFClientOptions) {
+    // @ts-expect-error this method will be defined by webpack
+    __webpack_init_sharing__('default');
+
     this._nextPageLoader = nextPageLoader;
     this.events = new EventEmitter<EventTypes>();
 
@@ -66,9 +69,6 @@ export class MFClient {
     singletonRouter.events.on('routeChangeStart', (pathname) =>
       this.reinitNextAppConfig(pathname).catch(() => {})
     );
-
-    // @ts-expect-error this method
-    __webpack_init_sharing__('default');
   }
 
   /**
