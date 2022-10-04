@@ -238,18 +238,19 @@ export class MFClient {
           if (!route) {
             // if route not found then try to load all non-downloaded remoteEntries
             // and try to find route again
-            const awaitRemotes = [] as Promise<any>[];
-            Object.values(this.remotes).forEach((remote) => {
+            // we MUST load routes serially because of webpack chunks loading
+            // (in parallel mode it starts to load similar chunks several times)
+            for (const key in this.remotes) {
+              const remote = this.remotes[key];
               if (!remote.isLoaded()) {
-                awaitRemotes.push(
-                  remote
-                    .getContainer()
-                    .then(() => this.remotePages.loadRemotePageMap(remote))
-                    .catch(() => null)
-                );
+                try {
+                  await remote.getContainer();
+                  await this.remotePages.loadRemotePageMap(remote);
+                } catch (e) {
+                  // do nothing
+                }
               }
-            });
-            await Promise.all(awaitRemotes);
+            }
             route = await this.pathnameToRoute(window.location.pathname);
           }
           if (route) {
