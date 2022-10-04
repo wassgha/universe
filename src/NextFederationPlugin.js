@@ -537,7 +537,7 @@ class NextFederationPlugin {
       'process.env.REMOTES': createRuntimeVariables(this._options.remotes),
       'process.env.CURRENT_HOST': JSON.stringify(this._options.name),
     }).apply(compiler);
-    if (!isDev || this._extraOptions.disableInDevMode) {
+    if (!isDev || !this._extraOptions.disableInDevMode) {
       new ChildFederationPlugin(this._options, this._extraOptions).apply(
         compiler
       );
