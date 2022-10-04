@@ -14,6 +14,16 @@ export type RemoteData = {
 };
 export type PageMap = Record<NextRoute, ModulePath>;
 
+export type NextAppConfigUrl = string;
+export type NextAppConfig = {
+  buildId?: string;
+  assetPrefix?: string;
+  /** List of public runtime variables @see https://nextjs.org/docs/api-reference/next.config.js/runtime-configuration */
+  runtimeConfig?: Record<string, any>;
+};
+
+type NextAppConfigLazy = () => Promise<NextAppConfig>;
+
 /**
  * This is a Lazy loader of webpack remote container with some NextJS-specific helper methods.
  *
@@ -24,8 +34,11 @@ export class RemoteContainer {
   url: string;
   container: WebpackRemoteContainer | undefined;
   pageMap: PageMap | undefined;
+  appConfig?: NextAppConfig | null;
+  private appConfigLazy?: NextAppConfigLazy;
   error?: Error;
   events: EventEmitter<EventTypes>;
+  private _loading: any;
 
   static instances: Record<string, RemoteContainer> = {};
 
@@ -36,7 +49,10 @@ export class RemoteContainer {
    * because one module may be copied between different chunks. In such a way
    * you obtain several lists of instances.
    */
-  static createSingleton(remote: string | RemoteData) {
+  static createSingleton(
+    remote: string | RemoteData,
+    appConfig?: NextAppConfig | NextAppConfigUrl
+  ): RemoteContainer {
     let data: RemoteData | undefined;
     if (typeof remote === 'string') {
       const [global, url] = remote.split('@');
@@ -59,17 +75,27 @@ export class RemoteContainer {
     if (this.instances[data.global]) {
       container = this.instances[data.global];
     } else {
-      container = new RemoteContainer(data);
+      container = new RemoteContainer(data, appConfig);
       this.instances[data.global] = container;
     }
 
     return container;
   }
 
-  constructor(opts: RemoteData) {
+  constructor(opts: RemoteData, appConfig?: NextAppConfig | NextAppConfigUrl) {
     this.global = opts.global;
     this.url = opts.url;
     this.events = new EventEmitter<EventTypes>();
+
+    if (appConfig) {
+      if (typeof appConfig === 'string') {
+        this.appConfigLazy = () => {
+          return fetch(appConfig).then((res) => res.json());
+        };
+      } else {
+        this.appConfig = appConfig;
+      }
+    }
   }
 
   /**
@@ -91,10 +117,18 @@ export class RemoteContainer {
     this.events.emit('loadStart', this);
 
     try {
-      const container = await injectScript({
-        global: this.global,
-        url: this.url,
-      });
+      // load in parallel remoteEntry and next app config
+      // for multiple `getContainer` call load data one time
+      this._loading =
+        this._loading ||
+        Promise.all([
+          injectScript({
+            global: this.global,
+            url: this.url,
+          }),
+          this.loadAppConfig(),
+        ]);
+      const [container] = await this._loading;
 
       if (container) {
         this.container = container;
@@ -108,6 +142,28 @@ export class RemoteContainer {
       this.events.emit('loadError', e.message, this);
       throw e;
     }
+  }
+
+  private async loadAppConfig(): Promise<NextAppConfig | null> {
+    if (this.appConfig || this.appConfig === null) {
+      return this.appConfig;
+    }
+
+    if (this.appConfigLazy) {
+      let cfg: NextAppConfig | null = null;
+      try {
+        cfg = await this.appConfigLazy();
+      } catch (e) {
+        console.error(
+          `[nextjs-mf] Cannot load next app config for remote ${this.global}`,
+          e
+        );
+      }
+      this.appConfig = cfg;
+      return cfg;
+    }
+
+    return null;
   }
 
   /**

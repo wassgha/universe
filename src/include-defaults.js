@@ -1,6 +1,7 @@
 require('react');
 require('react-dom');
 require('next/link');
+require('next/config');
 require('next/router');
 require('next/head');
 require('next/script');

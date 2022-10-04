@@ -1,9 +1,15 @@
 import type PageLoader from 'next/dist/client/page-loader';
+import singletonRouter from 'next/dist/client/router';
+import getConfig, { setConfig } from 'next/config';
 import EventEmitter from 'eventemitter3';
 import { pathnameToRoute } from './helpers';
 import { CombinedPages } from './CombinedPages';
 import { RemotePages } from './RemotePages';
-import { RemoteContainer } from './RemoteContainer';
+import {
+  NextAppConfig,
+  NextAppConfigUrl,
+  RemoteContainer,
+} from './RemoteContainer';
 
 type EventTypes = 'loadedRemoteRoute' | 'loadedLocalRoute';
 
@@ -35,17 +41,16 @@ export class MFClient {
     return __webpack_share_scopes__;
   }
 
+  private initialNextConfig: Record<string, any>;
+  get nextConfig() {
+    return getConfig();
+  }
+
   constructor(nextPageLoader: PageLoader, opts: MFClientOptions) {
     this._nextPageLoader = nextPageLoader;
     this.events = new EventEmitter<EventTypes>();
 
-    const cfg = (global as any)?.__NEXT_DATA__?.props?.mfRoutes || {};
-
-    this.remotePages = new RemotePages(opts?.mode);
-    Object.keys(cfg).forEach((remoteStr) => {
-      const remote = this.registerRemote(remoteStr);
-      this.remotePages.addRoutes(cfg[remoteStr], remote);
-    });
+    this.remotePages = this._initRemotePages(opts?.mode);
 
     const localPagesGetter = (
       this._nextPageLoader as any
@@ -57,8 +62,48 @@ export class MFClient {
     this._wrapLoadRoute(nextPageLoader);
     this._wrapWhenEntrypoint(nextPageLoader);
 
+    this.initialNextConfig = getConfig();
+    singletonRouter.events.on('routeChangeStart', (pathname) =>
+      this.reinitNextAppConfig(pathname).catch(() => {})
+    );
+
     // @ts-expect-error this method
     __webpack_init_sharing__('default');
+  }
+
+  /**
+   * Init remotes config from `window.__NEXT_DATA__` variable.
+   * This variable might be in the following forms:
+   *   - { 'home@https://example.com/_next/static/chunks/remoteEntry.js': '/home' }
+   *   - { 'home@https://example.com/_next/static/chunks/remoteEntry.js': [ '/home', '/new_home', '/home/link' ] }
+   *   - { 'home@https://example.com/_next/static/chunks/remoteEntry.js': { routes: '/home', config: 'https://example.com/nextjs-mf-config' }
+   *   - { 'home@https://example.com/_next/static/chunks/remoteEntry.js': { routes: ['/home', '/new_home'], config: 'https://example.com/nextjs-mf-config' }
+   *
+   * Where `config` is an url, eg. https://example.com/nextjs-mf-config which returns a json with NextJS public runtime config:
+   *   { runtimeConfig: { ... }, buildId: '123', assetPrefix: '' }
+   */
+  private _initRemotePages(mode?: 'production' | 'development') {
+    const remotePages = new RemotePages(mode);
+    const cfg = (global as any)?.__NEXT_DATA__?.props?.mfRoutes || {};
+    Object.keys(cfg).forEach((remoteStr) => {
+      const remoteCfg = cfg[remoteStr];
+      let routes: string | string[] | undefined;
+      let appConfigUrl: string | undefined;
+
+      if (typeof remoteCfg === 'string' || Array.isArray(remoteCfg)) {
+        routes = remoteCfg;
+      } else if (typeof remoteCfg === 'object') {
+        routes = remoteCfg.routes;
+        if (typeof remoteCfg.config === 'string') {
+          appConfigUrl = remoteCfg.config;
+        }
+      }
+
+      const remote = this.registerRemote(remoteStr, appConfigUrl);
+      if (routes) remotePages.addRoutes(routes, remote);
+    });
+
+    return remotePages;
   }
 
   /**
@@ -94,8 +139,11 @@ export class MFClient {
    *
    * @remoteStr string -  eg. `home@https://example.com/_next/static/chunks/remoteEntry.js`
    */
-  registerRemote(remoteStr: RemoteString) {
-    const remote = RemoteContainer.createSingleton(remoteStr);
+  registerRemote(
+    remoteStr: RemoteString,
+    appConfig?: NextAppConfig | NextAppConfigUrl
+  ) {
+    const remote = RemoteContainer.createSingleton(remoteStr, appConfig);
     this.remotes[remote.global] = remote;
     return remote;
   }
@@ -205,6 +253,8 @@ export class MFClient {
             route = await this.pathnameToRoute(window.location.pathname);
           }
           if (route) {
+            await this.reinitNextAppConfig(window.location.pathname);
+
             // TODO: fix router properties for the first page load of federated page http://localhost:3000/shop/products/B
             console.warn('replace entrypoint /_error by', route);
             const routeInfo = await this.remotePages.getRouteInfo(route);
@@ -223,5 +273,25 @@ export class MFClient {
       const routeInfo = await routeLoader._whenEntrypointOriginal(route);
       return routeInfo;
     };
+  }
+
+  async reinitNextAppConfig(pathname: string) {
+    if (this.isFederatedPathname(pathname)) {
+      const remote = this.remotePages.routeToRemote(pathname);
+      if (remote) {
+        await remote.getContainer();
+        // set config for remote nextjs app
+        const remoteAppConfig = remote?.appConfig?.runtimeConfig;
+        if (remoteAppConfig) {
+          setConfig({
+            serverRuntimeConfig: {},
+            publicRuntimeConfig: remoteAppConfig,
+          });
+        }
+      }
+    } else {
+      // set config from local nextjs app
+      setConfig(this.initialNextConfig);
+    }
   }
 }

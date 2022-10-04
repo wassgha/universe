@@ -70,7 +70,7 @@ export function useMFClient(opts: MFClientHookOptions): MFClient {
 
     if (initialRemote) {
       // important for first load to fire `onChangeRemote` with different remote
-      // because in innerState by default we assume that used local application
+      // because in innerState by default we assume that is used a local application
       processRemoteChange(initialRemote);
     }
 

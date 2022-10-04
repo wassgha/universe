@@ -150,6 +150,10 @@ const DEFAULT_SHARE_SCOPE = {
     requiredVersion: false,
     singleton: true,
   },
+  'next/config': {
+    requiredVersion: false,
+    singleton: true,
+  },
   'next/router': {
     requiredVersion: false,
     singleton: true,

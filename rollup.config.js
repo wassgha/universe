@@ -49,6 +49,7 @@ export default [
     },
     external: [
       'next/router',
+      'next/config',
       'next/dist/client/router',
       'react',
       'eventemitter3',
