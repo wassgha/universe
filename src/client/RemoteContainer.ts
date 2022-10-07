@@ -117,6 +117,9 @@ export class RemoteContainer {
     this.events.emit('loadStart', this);
 
     try {
+      const _url = new URL(this.url);
+      _url.searchParams.set('t', Date.now().toString());
+
       // load in parallel remoteEntry and next app config
       // for multiple `getContainer` call load data one time
       this._loading =
@@ -124,7 +127,7 @@ export class RemoteContainer {
         Promise.all([
           injectScript({
             global: this.global,
-            url: this.url,
+            url: _url.href,
           }),
           this.loadAppConfig(),
         ]);

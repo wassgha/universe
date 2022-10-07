@@ -10,7 +10,8 @@ const {
   hasLoader,
   toDisplayErrors,
 } = require('./loaders/helpers');
-const { exposeNextjsPages } = require('./loaders/nextPageMapLoader');
+const exposeNextjsPages =
+  require('./loaders/nextPageMapLoader').exposeNextjsPages;
 const DevHmrFixInvalidPongPlugin = require('./plugins/DevHmrFixInvalidPongPlugin');
 
 const CHILD_PLUGIN_NAME = 'ChildFederationPlugin';
