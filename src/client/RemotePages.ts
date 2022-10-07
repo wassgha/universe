@@ -129,7 +129,7 @@ export class RemotePages {
   /**
    * Get prepared pseudo-module which is consumed by Nextjs' router.
    */
-  async getRouteInfo(route: string): Promise<undefined | RouteInfo> {
+  async getRouteInfo(route: string): Promise<RouteInfo> {
     let routeInfo;
 
     try {
