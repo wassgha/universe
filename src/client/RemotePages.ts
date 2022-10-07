@@ -140,6 +140,10 @@ export class RemotePages {
           exports: mod,
           styles: [],
         };
+      } else {
+        throw new Error(
+          `Page module for route ${route} not found. Do you forget to create a remote page or link is invalid?`
+        );
       }
     } catch (e) {
       if (this.mode !== 'development') {
