@@ -120,12 +120,13 @@ export class MFClient {
   /**
    * Check that current browser pathname is served by federated remotes.
    *
-   * Eg. if cleanPathname `/shop/nodkz/product123` and pageListFederated is ['/shop/nodkz/[...mee]']
+   * Eg. if pathname `/shop/nodkz/product123?ok=456` and pageListFederated is ['/shop/nodkz/[...mee]']
    *     then this method will match federated dynamic route and return true.
    *
    * PS. This method is used by DevHmrFixInvalidPongPlugin (fix HMR page reloads in dev mode)
    */
-  isFederatedPathname(cleanPathname: string): boolean {
+  isFederatedPathname(dirtyPathname: string): boolean {
+    const cleanPathname = (dirtyPathname || '').split('?')[0];
     if (this.combinedPages.localPagesCache?.includes(cleanPathname)) {
       return false;
     }
@@ -276,8 +277,20 @@ export class MFClient {
     };
   }
 
-  async reinitNextAppConfig(pathname: string) {
-    if (this.isFederatedPathname(pathname)) {
+  /**
+   * This method set public NextJS config (publicRuntimeConfig) for any remote or host application.
+   * This config is global for browser and currently opened pages may use it.
+   *
+   * For example if we open `storage` service as hos app and then switch to `tickets` service
+   * then we have to reinit this config with tickets' publicRuntimeConfig variables. Otherwise tickets pages
+   * will connect to storage's GraphQL server.
+   */
+  async reinitNextAppConfig(dirtyPathname: string) {
+    const pathname = dirtyPathname?.split('?')[0];
+    if (await this.combinedPages.isLocalRoute(pathname)) {
+      // set config from local nextjs app
+      setConfig(this.initialNextConfig);
+    } else {
       const remote = this.remotePages.routeToRemote(pathname);
       if (remote) {
         await remote.getContainer();
@@ -290,9 +303,6 @@ export class MFClient {
           });
         }
       }
-    } else {
-      // set config from local nextjs app
-      setConfig(this.initialNextConfig);
     }
   }
 }

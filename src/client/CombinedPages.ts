@@ -27,6 +27,7 @@ export class CombinedPages {
 
   /**
    * Check that provided route belongs to host application
+   * it works with regular (/shop) and dynamic (/product/[...id]) routes
    */
   async isLocalRoute(route: string) {
     const localPages = await this.localPagesGetter();
