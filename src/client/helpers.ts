@@ -47,12 +47,29 @@ function getParametrizedRoute(route: string) {
   };
 }
 
-export function getRouteRegex(normalizedRoute: string) {
-  const { parameterizedRoute, groups } = getParametrizedRoute(normalizedRoute);
-  return {
-    re: new RegExp(`^${parameterizedRoute}(?:/)?$`),
-    groups: groups,
-  };
+export interface Group {
+  pos: number;
+  repeat: boolean;
+  optional: boolean;
+}
+
+export interface RouteRegex {
+  groups: { [groupName: string]: Group };
+  re: RegExp;
+}
+
+const memoRouteToRegexp = {} as Record<string, RouteRegex>;
+
+export function getRouteRegex(normalizedRoute: string): RouteRegex {
+  if (!memoRouteToRegexp[normalizedRoute]) {
+    const { parameterizedRoute, groups } =
+      getParametrizedRoute(normalizedRoute);
+    memoRouteToRegexp[normalizedRoute] = {
+      re: new RegExp(`^${parameterizedRoute}(?:/)?$`),
+      groups: groups,
+    };
+  }
+  return memoRouteToRegexp[normalizedRoute];
 }
 
 const reHasRegExp = /[|\\{}()[\]^$+*?.-]/;
@@ -96,4 +113,57 @@ export function sortNextPages(pages: string[]): string[] {
   pages.forEach((pageRoute) => root.insert(pageRoute));
   // Smoosh will then sort those sublevels up to the point where you get the correct route definition priority
   return root.smoosh();
+}
+
+/**
+ * Removes the trailing slash for a given route or page path. Preserves the
+ * root page. Examples:
+ *   - `/foo/bar/` -> `/foo/bar`
+ *   - `/foo/bar` -> `/foo/bar`
+ *   - `/` -> `/`
+ */
+export function removeTrailingSlash(route: string) {
+  return route.replace(/\/$/, '') || '/';
+}
+
+/**
+ * For a given page path, this function ensures that there is no backslash
+ * escaping slashes in the path. Example:
+ *  - `foo\/bar\/baz` -> `foo/bar/baz`
+ */
+export function normalizePathSep(path: string): string {
+  return path.replace(/\\/g, '/');
+}
+
+/**
+ * Performs the opposite transformation of `normalizePagePath`. Note that
+ * this function is not idempotent either in cases where there are multiple
+ * leading `/index` for the page. Examples:
+ *  - `/index` -> `/`
+ *  - `/index/foo` -> `/foo`
+ *  - `/index/index` -> `/index`
+ */
+export function denormalizePagePath(page: string) {
+  let _page = normalizePathSep(page);
+  return _page.startsWith('/index/') && !isDynamicRoute(_page)
+    ? _page.slice(6)
+    : _page !== '/index'
+    ? _page
+    : '/';
+}
+
+export function findRoute(pathname: string, pages: string[]) {
+  const cleanPathname = removeTrailingSlash(denormalizePagePath(pathname));
+
+  if (pages.includes(cleanPathname)) {
+    return cleanPathname;
+  }
+
+  for (const page of pages) {
+    if (isDynamicRoute(page) && getRouteRegex(page).re.test(cleanPathname)) {
+      return page;
+    }
+  }
+
+  return undefined;
 }

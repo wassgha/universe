@@ -1,4 +1,4 @@
-import { sortNextPages } from './helpers';
+import { findRoute, sortNextPages } from './helpers';
 import { RemotePages } from './RemotePages';
 
 /**
@@ -26,12 +26,31 @@ export class CombinedPages {
   }
 
   /**
-   * Check that provided route belongs to host application
-   * it works with regular (/shop) and dynamic (/product/[...id]) routes
+   * Check that local route is registered in nextjs.
    */
   async isLocalRoute(route: string) {
     const localPages = await this.localPagesGetter();
     return localPages.includes(route);
+  }
+
+  /**
+   * Check that provided pathname belongs to host application
+   * it works with regular (/shop) and dynamic (/product/[...id]) pathnames
+   */
+  async isLocalPathname(dirtyPathname: string) {
+    const cleanPathname = (dirtyPathname || '').split('?')[0];
+    const pages = await this.localPagesGetter();
+    return !!findRoute(cleanPathname, pages);
+  }
+
+  /**
+   * Sync check that provided pathname belongs to host application
+   * it works with regular (/shop) and dynamic (/product/[...id]) pathnames
+   */
+  isLocalPathnameSync(dirtyPathname: string) {
+    if (!this.localPagesCache) return false;
+    const cleanPathname = (dirtyPathname || '').split('?')[0];
+    return !!findRoute(cleanPathname, this.localPagesCache);
   }
 
   /**

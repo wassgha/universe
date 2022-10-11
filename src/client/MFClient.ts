@@ -123,14 +123,15 @@ export class MFClient {
    * Eg. if pathname `/shop/nodkz/product123?ok=456` and pageListFederated is ['/shop/nodkz/[...mee]']
    *     then this method will match federated dynamic route and return true.
    *
-   * PS. This method is used by DevHmrFixInvalidPongPlugin (fix HMR page reloads in dev mode)
+   * PS. This method MUST BE SYNC because it is used
+   *   - by DevHmrFixInvalidPongPlugin (fix HMR page reloads in dev mode)
+   *   - also it's used in useFMClient hook
    */
   isFederatedPathname(dirtyPathname: string): boolean {
     const cleanPathname = (dirtyPathname || '').split('?')[0];
-    if (this.combinedPages.localPagesCache?.includes(cleanPathname)) {
+    if (this.combinedPages.isLocalPathnameSync(cleanPathname)) {
       return false;
     }
-
     return !!this.remotePages.routeToRemote(cleanPathname);
   }
 
@@ -287,7 +288,7 @@ export class MFClient {
    */
   async reinitNextAppConfig(dirtyPathname: string) {
     const pathname = dirtyPathname?.split('?')[0];
-    if (await this.combinedPages.isLocalRoute(pathname)) {
+    if (await this.combinedPages.isLocalPathname(pathname)) {
       // set config from local nextjs app
       setConfig(this.initialNextConfig);
     } else {
