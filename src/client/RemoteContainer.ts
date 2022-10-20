@@ -129,7 +129,7 @@ export class RemoteContainer {
             global: this.global,
             url: _url.href,
           }),
-          this.loadAppConfig(),
+          this.getAppConfig(),
         ]);
       const [container] = await this._loading;
 
@@ -147,7 +147,7 @@ export class RemoteContainer {
     }
   }
 
-  private async loadAppConfig(): Promise<NextAppConfig | null> {
+  async getAppConfig(): Promise<NextAppConfig | null> {
     if (this.appConfig || this.appConfig === null) {
       return this.appConfig;
     }
