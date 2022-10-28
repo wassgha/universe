@@ -93,7 +93,8 @@ export class RemotePages {
   /**
    * Find remote according to provided route.
    */
-  routeToRemote(route: string): RemoteContainer | undefined {
+  routeToRemote(dirtyRoute: string): RemoteContainer | undefined {
+    const route = dirtyRoute.split('?')[0];
     let bestMatch: string | undefined;
 
     for (const basepath in this.paths) {
