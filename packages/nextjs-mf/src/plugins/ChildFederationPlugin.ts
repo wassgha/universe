@@ -37,8 +37,8 @@ const childCompilers = {} as Record<string, Compiler>;
 export class ChildFederationPlugin {
   private _options: ModuleFederationPluginOptions;
   private _extraOptions: NextFederationPluginExtraOptions;
-  private watching?: Boolean;
-  private initalRun: Boolean;
+  private watching?: boolean;
+  private initalRun: boolean;
 
   constructor(
     options: ModuleFederationPluginOptions,
@@ -156,7 +156,8 @@ export class ChildFederationPlugin {
             resolveRequest: string
           ) => Promise<[string | null, boolean]>
         ) {
-          //@ts-ignore
+
+          // @ts-ignore
           const externalResult = await compiler.options.externals[0](context, request, dependencyType, layer, getResolve)
           console.log(externalResult)
           return externalResult

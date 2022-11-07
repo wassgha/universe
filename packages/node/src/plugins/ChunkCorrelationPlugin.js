@@ -47,19 +47,17 @@ const flatMap = (xs, f) => xs.map(f).reduce(concat, []);
 /**
  *
  * @param {WebpackStats} stats
- * @returns {}
+ * @returns {string[]}
  */
-function getRemoteModules(stats) {
-  return stats.modules
-    .filter((mod) => {
-      return mod.moduleType === 'remote-module';
-    })
-    .reduce((acc, remoteModule) => {
-      acc[remoteModule.nameForCondition] = remoteModule.id;
-      return acc;
-    }, {});
-}
-
+ function getRemoteModules(stats) {
+  const remoteModules = {};
+  for (const mod of stats.modules) {
+    if (mod.moduleType === 'remote-module') {
+      remoteModules[mod.nameForCondition] = mod.id;
+    }
+  }
+  return remoteModules;
+} 
 /**
  *
  * @param {WebpackStats} stats

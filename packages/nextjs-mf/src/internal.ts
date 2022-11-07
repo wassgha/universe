@@ -71,6 +71,11 @@ export const RSC_SHARE_SCOPE: SharedObject = {
     requiredVersion: false,
     shareKey: "next/link"
   },
+  // "next/dist/shared/lib/router-context": {
+  //   singleton: true,
+  //   import: "next/dist/shared/lib/router-context",
+  //   requiredVersion: false,
+  // },
   "next/dist/compiled/react/": {
     singleton: true,
     requiredVersion: false
@@ -213,6 +218,7 @@ export const reKeyHostShared = (
       // if(!['next/link'].includes(itemKey)) {
       //   if (shareOptions.import && !shareOptions.import.includes("?")) {
       //     acc[shareKey].import = `${acc[shareKey].import}?${layer}`;
+      //     console.log({hasAppDir, isServer, itemKey})
       //   }
       // }
       //@ts-ignore
