@@ -12,15 +12,16 @@ import type {
 import { createRuntimeVariables } from "@module-federation/utilities";
 
 import path from "path";
-import type { Compiler } from "webpack";
+import type { Compiler, Module, Chunk } from "webpack";
 
-import { internalizeSharedPackages, parseRemotes, reKeyHostShared } from "../internal";
+import { internalizeSharedPackages, parseRemotes, reKeyHostShared, RSC_SHARE_SCOPE } from "../internal";
 import AddRuntimeRequirementToPromiseExternal from "./AddRuntimeRequirementToPromiseExternalPlugin";
 import ChildFederationPlugin from "./ChildFederationPlugin";
 
 import DevHmrFixInvalidPongPlugin from "./DevHmrFixInvalidPongPlugin";
 import fs from "fs";
 import * as NextConstants from "next/dist/lib/constants";
+import { NormalModule } from "webpack";
 
 export class NextFederationPlugin {
   private _options: ModuleFederationPluginOptions;
@@ -82,12 +83,13 @@ export class NextFederationPlugin {
       const chunksInBuild = new Map();
       compiler.hooks.compilation.tap("NextFederationPlugin", (compilation) => {
           compilation.hooks.chunkAsset.tap("NextFederationPlugin", (chunk, file) => {
-          chunksInBuild.set(chunk.id, file);
+            chunksInBuild.set(chunk.id, file);
             if (this._options.name && [chunk.name, chunk.id].includes(this._options.name)) {
-              chunksInRemote.add(chunk.id);
-              const allChunksInRemote = chunk.getAllAsyncChunks();
-              for (const federatedChunk of allChunksInRemote) {
-                chunksInRemote.add(federatedChunk.id);
+              // chunksInRemote.add(chunk.id);
+
+              const allReferencedChunks = chunk.getAllReferencedChunks();
+              for (const referencedChunk of allReferencedChunks) {
+                chunksInRemote.add(referencedChunk.id);
               }
             }
           });
@@ -95,28 +97,96 @@ export class NextFederationPlugin {
       );
 
       compiler.hooks.afterEmit.tap("NextFederationPlugin", (compilation) => {
-        Array.from(chunksInRemote).forEach((chunkId) => {
+        console.log("chunksInBuild", chunksInBuild);
+        console.log("chunksInRemote", chunksInRemote);
+        const staticAssetsDir = path.join(compiler.context, ".next", "static", "ssr");
+
+        if (!fs.existsSync(staticAssetsDir)) {
+          fs.mkdirSync(staticAssetsDir, { recursive: true });
+        }
+        for (const chunkId of chunksInRemote) {
           const chunkFile = chunksInBuild.get(chunkId);
           if (chunkFile) {
-
             //@ts-ignore
             const chunkPath = path.join(compilation.outputOptions.path, chunkFile);
-const staticAssetsDir = path.join(compiler.context,'.next','static','ssr');
-// console.log(chunkPath, path.join(staticAssetsDir, chunkFile));
-            if(!fs.existsSync(staticAssetsDir)) {
-              fs.mkdirSync(staticAssetsDir, { recursive: true });
-            }
-
-            let serverChunk = fs.readFileSync(chunkPath, 'utf-8');
-            serverChunk = serverChunk.replace("self.$RefreshInterceptModuleExecution$", "false")
-            fs.writeFileSync(path.join(staticAssetsDir, chunkFile), serverChunk);
-            // fs.copyFileSync(chunkPath, path.join(staticAssetsDir, chunkFile));
-
-            // fs.writeFileSync(chunkPath, newChunkSource);
+            console.log("staticAssetsDir", staticAssetsDir);
+            fs.copyFileSync(chunkPath, path.join(staticAssetsDir, chunkFile));
           }
-        });
+        }
+
+//         Array.from(chunksInRemote).forEach((chunkId) => {
+//           const chunkFile = chunksInBuild.get(chunkId);
+//           if (chunkFile) {
+//
+//             //@ts-ignore
+//             const chunkPath = path.join(compilation.outputOptions.path, chunkFile);
+// const staticAssetsDir = path.join(compiler.context,'.next','static','ssr');
+// // console.log(chunkPath, path.join(staticAssetsDir, chunkFile));
+//             if(!fs.existsSync(staticAssetsDir)) {
+//               fs.mkdirSync(staticAssetsDir, { recursive: true });
+//             }
+//
+//             let serverChunk = fs.readFileSync(chunkPath, 'utf-8');
+//             serverChunk = serverChunk.replace("self.$RefreshInterceptModuleExecution$", "false")
+//             fs.writeFileSync(path.join(staticAssetsDir, chunkFile), serverChunk);
+//             // fs.copyFileSync(chunkPath, path.join(staticAssetsDir, chunkFile));
+//
+//             // fs.writeFileSync(chunkPath, newChunkSource);
+//           }
+//         });
       });
 
+      console.log("split chunks", compiler.options.optimization.splitChunks);
+      if (!compiler.options.optimization.splitChunks) {
+
+        const regexToTest = new RegExp(Object.keys(RSC_SHARE_SCOPE).join("|"));
+
+        compiler.options.optimization.splitChunks = {
+          cacheGroups: {
+            sharedSplits: {
+              chunks:(chunk) => {
+                console.log("chunk", chunk);
+                return chunk.runtime !== this._options.name
+              },
+              // regext test array of values
+              test:(module: NormalModule, chunks: Chunk[]) => {
+               // get files that contain next/dist in path
+                const isNextDist = module.resource && module.resource.includes("next/dist");
+                // exclude files that contain next/dist/build in path
+                const notNextDistBuild = module.resource && !module.resource.includes("next/dist/build");
+                // exclude files that contain next/dist/lib in path
+                const notNextDistLib = module.resource && !module.resource.includes("next/dist/lib");
+                // exclude files that contain pages in path
+                const notPages = module.resource && !module.resource.includes("pages");
+
+                if(isNextDist && notNextDistBuild && notNextDistLib && notPages) {
+                  return true;
+                }
+                return false;
+              },
+              name(module: Module, chunks: Chunk[], cacheGroupKey: string) {
+                const moduleFileName = module
+                  .identifier()
+                  .split("/")
+                  .reduceRight((item: string) => item);
+
+
+
+                const allChunksNames = chunks.map((item: Chunk) => item.name).join("~");
+                console.log(cacheGroupKey, moduleFileName);
+                return `${cacheGroupKey}-${allChunksNames}-${moduleFileName}`;
+              },
+              enforce: true,
+              reuseExistingChunk: true
+            }
+          }
+        };
+      }
+// compiler.options.optimization.splitChunks.cacheGroups = {
+//   sharedSplits: {
+//
+//   }
+// }
       // should this be a plugin that we apply to the compiler?
       internalizeSharedPackages(this._options, compiler);
     } else {
@@ -124,40 +194,50 @@ const staticAssetsDir = path.join(compiler.context,'.next','static','ssr');
       // get modules in chunks
       const chunksInRemote = new Set();
       const chunksInBuild = new Map();
-      compiler.hooks.compilation.tap("NextFederationPlugin", (compilation) => {
-          compilation.hooks.chunkAsset.tap("NextFederationPlugin", (chunk, file) => {
-            chunksInBuild.set(chunk.id, file);
-            if (this._options.name && [chunk.name, chunk.id].includes(this._options.name)) {
-              chunksInRemote.add(chunk.id);
-              const allChunksInRemote = chunk.getAllAsyncChunks();
-              for (const federatedChunk of allChunksInRemote) {
-                chunksInRemote.add(federatedChunk.id);
-              }
-            }
-          });
-        }
-      );
+      // compiler.hooks.compilation.tap("NextFederationPlugin", (compilation) => {
+      //     compilation.hooks.chunkAsset.tap("NextFederationPlugin", (chunk, file) => {
+      //       chunksInBuild.set(chunk.id, chunk);
+      //       if (this._options.name && [chunk.name, chunk.id].includes(this._options.name)) {
+      //         const allChunksInRemote = chunk.getAllReferencedChunks();
+      //         const allinitial = chunk.getAllInitialChunks();
+      //         // const recursivelyGetAllReferencedChunks = (chunk: Chunk) => {
+      //         //   const allReferencedChunks = chunk.getAllReferencedChunks();
+      //         //   allReferencedChunks.forEach((referencedChunk) => {
+      //         //     chunksInRemote.add(referencedChunk.id);
+      //         //     recursivelyGetAllReferencedChunks(referencedChunk);
+      //         //   })
+      //         // }
+      //
+      //         // recursivelyGetAllReferencedChunks(chunk);
+      //         for (const federatedChunk of allChunksInRemote) {
+      //           chunksInRemote.add(federatedChunk.id);
+      //         }
+      //       }
+      //     });
+      //   }
+      // );
 
-      compiler.hooks.afterEmit.tap("NextFederationPlugin", (compilation) => {
-        Array.from(chunksInRemote).forEach((chunkId) => {
-          const chunkFile = chunksInBuild.get(chunkId);
-          if (chunkFile) {
 
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            //@ts-ignore
-            const chunkPath = path.join(compilation.outputOptions.path, chunkFile);
-// console.log(chunkPath, path.join(staticAssetsDir, chunkFile));
-
-
-            let serverChunk = fs.readFileSync(chunkPath, 'utf-8');
-            serverChunk = serverChunk.replace("$RefreshHelpers$", "shitsMissin")
-            fs.writeFileSync(path.join(chunkPath), serverChunk);
-            // fs.copyFileSync(chunkPath, path.join(staticAssetsDir, chunkFile));
-
-            // fs.writeFileSync(chunkPath, newChunkSource);
-          }
-        });
-      });
+//       compiler.hooks.afterEmit.tap("NextFederationPlugin", (compilation) => {
+//         Array.from(chunksInRemote).forEach((chunkId) => {
+//           const chunkFile = chunksInBuild.get(chunkId);
+//           if (chunkFile) {
+//
+//             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+//             //@ts-ignore
+//             const chunkPath = path.join(compilation.outputOptions.path, chunkFile.files[0]);
+// // console.log(chunkPath, path.join(staticAssetsDir, chunkFile));
+//
+//
+//             let serverChunk = fs.readFileSync(chunkPath, 'utf-8');
+//             serverChunk = serverChunk.replace("$RefreshHelpers$", "shitsMissin")
+//             fs.writeFileSync(path.join(chunkPath), serverChunk);
+//             // fs.copyFileSync(chunkPath, path.join(staticAssetsDir, chunkFile));
+//
+//             // fs.writeFileSync(chunkPath, newChunkSource);
+//           }
+//         });
+//       });
 
       if (this._extraOptions.automaticPageStitching) {
         compiler.options.module.rules.push({
@@ -186,23 +266,23 @@ const staticAssetsDir = path.join(compiler.context,'.next','static','ssr');
     }
 
     // patch next
-    compiler.options.module.rules.push({
-      test(request: string) {
-        if (request.includes(path.join(compiler.context, "pages"))) {
-          return /\.(js|jsx|ts|tsx|md|mdx|mjs)$/i.test(request);
-        }
-        if (compiler.options.name === "client") {
-          return /app-router/.test(request);
-        }
-        return false;
-      },
-      // include: compiler.context,
-      // exclude: /node_modules/,
-      loader: path.resolve(
-        __dirname,
-        "../loaders/patchDefaultSharedLoader"
-      )
-    });
+    // compiler.options.module.rules.push({
+    //   test(request: string) {
+    //     if (request.includes(path.join(compiler.context, "pages"))) {
+    //       return /\.(js|jsx|ts|tsx|md|mdx|mjs)$/i.test(request);
+    //     }
+    //     if (compiler.options.name === "client") {
+    //       return /app-router/.test(request);
+    //     }
+    //     return false;
+    //   },
+    //   // include: compiler.context,
+    //   // exclude: /node_modules/,
+    //   loader: path.resolve(
+    //     __dirname,
+    //     "../loaders/patchDefaultSharedLoader"
+    //   )
+    // });
 
     if (isServer && hasAppDir) {
       //@ts-ignore
@@ -232,9 +312,10 @@ const staticAssetsDir = path.join(compiler.context,'.next','static','ssr');
     //patch server components
     compiler.options.module.rules.push({
       test(request: string) {
-        if (request.includes(path.join(compiler.context, "app"))) {
-          return /(page|layout)\.(js|jsx|ts|tsx|md|mdx|mjs)$/i.test(request);
-        }
+
+        // if (request.includes(path.join(compiler.context, "app"))) {
+        return /(GlobalNav)\.(js|jsx|ts|tsx|md|mdx|mjs)$/i.test(request);
+        // }
         return false;
       },
       include: compiler.context,

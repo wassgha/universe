@@ -44,7 +44,7 @@ const IsomorphicRemoteTemplate = function () {
   if (index <= 0 || index === urlAndGlobal.length - 1) {
     throw new Error(`Invalid request "${urlAndGlobal}"`);
   }
-  var remote = {
+  const remote = {
     url: urlAndGlobal.substring(index + 1),
     global: urlAndGlobal.substring(0, index) as unknown as number, // this casting to satisfy TS
   };
@@ -109,9 +109,9 @@ const IsomorphicRemoteTemplate = function () {
           }
         }
 
-        var errorType =
+        const errorType =
           event && (event.type === 'load' ? 'missing' : event.type);
-        var realSrc =
+        const realSrc =
           event && event.target && (event.target as HTMLScriptElement).src;
 
         __webpack_error__.message =
