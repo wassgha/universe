@@ -80,6 +80,16 @@ export const RSC_SHARE_SCOPE: SharedObject = {
     singleton: true,
     requiredVersion: false
   },
+  "react":{
+    singleton: true,
+    requiredVersion: false,
+    import: "next/dist/compiled/react"
+  },
+  // "next/":{
+  //   singleton: true,
+  //   requiredVersion: false,
+  //   version: require("next/package.json").version,
+  // },
   // "next/headers": {
   //   requiredVersion: false,
   //   singleton: true,
@@ -166,6 +176,30 @@ export const RSC_SHARE_SCOPE: SharedObject = {
   "next/navigation": {
     shareKey: "next/navigation",
     import: "next/navigation",
+    singleton: true,
+    requiredVersion: false
+  },
+  "next/dist/compiled/react-dom/client": {
+    singleton: true,
+    requiredVersion: false
+  },
+  "next/dist/compiled/react-dom": {
+    singleton: true,
+    requiredVersion: false
+  },
+  "next/dist/compiled/react":{
+    singleton: true,
+    requiredVersion: false
+  },
+  "next/dist/compiled/react/react.shared-subset": {
+    singleton: true,
+    requiredVersion: false
+  },
+  "next/dist/compiled/react-dom/server-rendering-stub": {
+    singleton: true,
+    requiredVersion: false
+  },
+  "next/dist/client/components/dynamic": {
     singleton: true,
     requiredVersion: false
   }
