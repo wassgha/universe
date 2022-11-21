@@ -50,10 +50,10 @@ export class ChildFederationPlugin {
   }
 
   apply(compiler: Compiler) {
-    const webpack = compiler.webpack;
+    const { webpack } = compiler;
     const LibraryPlugin = webpack.library.EnableLibraryPlugin;
-    const LoaderTargetPlugin = webpack.LoaderTargetPlugin;
-    const library = compiler.options.output.library;
+    const { LoaderTargetPlugin } = webpack;
+    const { library } = compiler.options.output;
     const isServer = compiler.options.name === 'server';
     const isDev = compiler.options.mode === 'development';
     let outputPath: string;
@@ -61,11 +61,7 @@ export class ChildFederationPlugin {
     if (isDev && isServer) {
       outputPath = path.join(getOutputPath(compiler), 'static/ssr');
     } else {
-      if (isServer) {
-        outputPath = path.join(getOutputPath(compiler), 'static/ssr');
-      } else {
-        outputPath = compiler.options.output.path as string;
-      }
+      outputPath = isServer ? path.join(getOutputPath(compiler), 'static/ssr') : compiler.options.output.path as string;
     }
 
     compiler.hooks.thisCompilation.tap(CHILD_PLUGIN_NAME, (compilation) => {
@@ -78,9 +74,9 @@ export class ChildFederationPlugin {
         ...compiler.options.output,
         path: outputPath,
         // path: deriveOutputPath(isServer, compiler.options.output.path),
-        name: 'child-'+compiler.options.name,
+        name: `child-${compiler.options.name}`,
         publicPath: 'auto',
-        chunkLoadingGlobal: buildName + 'chunkLoader',
+        chunkLoadingGlobal: `${buildName}chunkLoader`,
         uniqueName: buildName,
         library: {
           name: buildName,
@@ -144,24 +140,7 @@ export class ChildFederationPlugin {
           new AddRuntimeRequirementToPromiseExternal(),
         ];
       } else if (compiler.options.name === 'server') {
-        async function handleExternals(
-          context: string,
-          request: string,
-          dependencyType: string,
-          layer: string | null,
-          getResolve: (
-            options: any
-          ) => (
-            resolveContext: string,
-            resolveRequest: string
-          ) => Promise<[string | null, boolean]>
-        ) {
-
-          // @ts-ignore
-          const externalResult = await compiler.options.externals[0](context, request, dependencyType, layer, getResolve)
-          console.log(externalResult)
-          return externalResult
-        }
+        newFunction(compiler);
         const {
           StreamingTargetPlugin,
           NodeFederationPlugin,
@@ -256,9 +235,7 @@ export class ChildFederationPlugin {
       new RemoveRRRuntimePlugin().apply(childCompiler);
 
       // TODO: Provide better types for MiniCss Plugin for ChildCompiler in ChildFederationPlugin
-      const MiniCss = childCompiler.options.plugins.find((p) => {
-        return p.constructor.name === 'NextMiniCssExtractPlugin';
-      }) as any;
+      const MiniCss = childCompiler.options.plugins.find((p) => p.constructor.name === 'NextMiniCssExtractPlugin') as any;
 
       childCompiler.options.plugins = childCompiler.options.plugins.filter(
         (plugin) => !removePlugins.includes(plugin.constructor.name)
@@ -298,12 +275,12 @@ export class ChildFederationPlugin {
 
         const compilerCallback = (err: Error | null | undefined, stats: Stats | undefined) => {
           //workaround due to watch mode not running unless youve hit a page on the remote itself
-          if (isServer && isDev && childCompilers['client']) {
-            childCompilers['client'].run((err, stats) => {
+          if (isServer && isDev && childCompilers["client"]) {
+            childCompilers["client"].run((err, stats) => {
               if (err) {
                 compilation.errors.push(err as WebpackError);
               }
-              if (stats && stats.hasErrors()) {
+              if (stats?.hasErrors()) {
                 compilation.errors.push(
                   new Error(
                     toDisplayErrors(stats.compilation.errors)
@@ -315,7 +292,7 @@ export class ChildFederationPlugin {
           if (err) {
             compilation.errors.push(err as WebpackError);
           }
-          if (stats && stats.hasErrors()) {
+          if (stats?.hasErrors()) {
             compilation.errors.push(
               new Error(
                 toDisplayErrors(stats.compilation.errors)
@@ -325,10 +302,12 @@ export class ChildFederationPlugin {
         }
 
         compilerWithCallback(compiler.options.watchOptions, compilerCallback);
+        return;
 
 
         // in prod, if client
-      } else if (!isServer) {
+      }
+      if (!isServer) {
         // if ssr enabled and server in compiler cache
         if (childCompilers['server']) {
           //wrong hook for this
@@ -338,33 +317,31 @@ export class ChildFederationPlugin {
               name: CHILD_PLUGIN_NAME,
               stage: Compilation.PROCESS_ASSETS_STAGE_REPORT,
             },
-            () => {
-              return new Promise((res, rej) => {
-                // run server child compilation during client main compilation
-                childCompilers['server'].run((err, stats) => {
-                  if (err) {
-                    compilation.errors.push(err as WebpackError);
-                    rej();
-                  }
-                  if(stats && stats.hasWarnings()) {
-                    compilation.warnings.push(
-                      new Error(
-                        toDisplayErrors(stats.compilation.warnings)
-                      ) as WebpackError
-                    );
-                  }
-                  if (stats && stats.hasErrors()) {
-                    compilation.errors.push(
-                      new Error(
-                        toDisplayErrors(stats.compilation.errors)
-                      ) as WebpackError
-                    );
-                    rej();
-                  }
-                  res();
-                });
+            () => new Promise((res, rej) => {
+              // run server child compilation during client main compilation
+              childCompilers["server"].run((err, stats) => {
+                if (err) {
+                  compilation.errors.push(err as WebpackError);
+                  rej();
+                }
+                if(stats?.hasWarnings()) {
+                  compilation.warnings.push(
+                    new Error(
+                      toDisplayErrors(stats.compilation.warnings)
+                    ) as WebpackError
+                  );
+                }
+                if (stats?.hasErrors()) {
+                  compilation.errors.push(
+                    new Error(
+                      toDisplayErrors(stats.compilation.errors)
+                    ) as WebpackError
+                  );
+                  rej();
+                }
+                res();
               });
-            }
+            })
           );
         }
         // run client child compiler like normal
@@ -372,14 +349,14 @@ export class ChildFederationPlugin {
           if (err) {
             compilation.errors.push(err as WebpackError);
           }
-          if(stats && stats.hasWarnings()) {
+          if(stats?.hasWarnings()) {
             compilation.warnings.push(
               new Error(
                 toDisplayErrors(stats.compilation.warnings)
               ) as WebpackError
             );
           }
-          if (stats && stats.hasErrors()) {
+          if (stats?.hasErrors()) {
             compilation.errors.push(
               new Error(
                 toDisplayErrors(stats.compilation.errors)
@@ -393,3 +370,21 @@ export class ChildFederationPlugin {
 }
 
 export default ChildFederationPlugin;
+function newFunction(compiler: Compiler) {
+  async function handleExternals(
+    context: string,
+    request: string,
+    dependencyType: string,
+    layer: string | null,
+    getResolve: (
+      options: any
+    ) => (
+      resolveContext: string,
+      resolveRequest: string
+    ) => Promise<[string | null, boolean]>
+  ) {
+// @ts-ignore
+    return await compiler.options.externals[0](context, request, dependencyType, layer, getResolve);
+  }
+}
+

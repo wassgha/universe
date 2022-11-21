@@ -24,8 +24,7 @@ export function hasLoader(rule: RuleSetRuleUnion, loaderName: string) {
     if (rule.loader === loaderName) {
       return true;
     } else if (rule.use && Array.isArray(rule.use)) {
-      for (let i = 0; i < rule.use.length; i++) {
-        const loader = rule.use[i];
+      for (const loader of rule.use) {
         // check exact name, eg "url-loader" or its path "node_modules/url-loader/dist/cjs.js"
         if (
           typeof loader !== 'string' &&

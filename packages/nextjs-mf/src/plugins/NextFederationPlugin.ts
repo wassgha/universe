@@ -114,79 +114,10 @@ export class NextFederationPlugin {
           }
         }
 
-//         Array.from(chunksInRemote).forEach((chunkId) => {
-//           const chunkFile = chunksInBuild.get(chunkId);
-//           if (chunkFile) {
-//
-//             //@ts-ignore
-//             const chunkPath = path.join(compilation.outputOptions.path, chunkFile);
-// const staticAssetsDir = path.join(compiler.context,'.next','static','ssr');
-// // console.log(chunkPath, path.join(staticAssetsDir, chunkFile));
-//             if(!fs.existsSync(staticAssetsDir)) {
-//               fs.mkdirSync(staticAssetsDir, { recursive: true });
-//             }
-//
-//             let serverChunk = fs.readFileSync(chunkPath, 'utf-8');
-//             serverChunk = serverChunk.replace("self.$RefreshInterceptModuleExecution$", "false")
-//             fs.writeFileSync(path.join(staticAssetsDir, chunkFile), serverChunk);
-//             // fs.copyFileSync(chunkPath, path.join(staticAssetsDir, chunkFile));
-//
-//             // fs.writeFileSync(chunkPath, newChunkSource);
-//           }
-//         });
+        chunksInRemote.clear();
+        chunksInBuild.clear();
       });
 
-      console.log("split chunks", compiler.options.optimization.splitChunks);
-      if (!compiler.options.optimization.splitChunks) {
-
-        const regexToTest = new RegExp(Object.keys(RSC_SHARE_SCOPE).join("|"));
-
-        compiler.options.optimization.splitChunks = {
-          cacheGroups: {
-            sharedSplits: {
-              chunks:(chunk) => {
-                console.log("chunk", chunk);
-                return chunk.runtime !== this._options.name
-              },
-              // regext test array of values
-              test:(module: NormalModule, chunks: Chunk[]) => {
-               // get files that contain next/dist in path
-                const isNextDist = module.resource && module.resource.includes("next/dist");
-                // exclude files that contain next/dist/build in path
-                const notNextDistBuild = module.resource && !module.resource.includes("next/dist/build");
-                // exclude files that contain next/dist/lib in path
-                const notNextDistLib = module.resource && !module.resource.includes("next/dist/lib");
-                // exclude files that contain pages in path
-                const notPages = module.resource && !module.resource.includes("pages");
-
-                if(isNextDist && notNextDistBuild && notNextDistLib && notPages) {
-                  return true;
-                }
-                return false;
-              },
-              name(module: Module, chunks: Chunk[], cacheGroupKey: string) {
-                const moduleFileName = module
-                  .identifier()
-                  .split("/")
-                  .reduceRight((item: string) => item);
-
-
-
-                const allChunksNames = chunks.map((item: Chunk) => item.name).join("~");
-                console.log(cacheGroupKey, moduleFileName);
-                return `${cacheGroupKey}-${allChunksNames}-${moduleFileName}`;
-              },
-              enforce: true,
-              reuseExistingChunk: true
-            }
-          }
-        };
-      }
-// compiler.options.optimization.splitChunks.cacheGroups = {
-//   sharedSplits: {
-//
-//   }
-// }
       // should this be a plugin that we apply to the compiler?
       internalizeSharedPackages(this._options, compiler);
     } else {
@@ -265,6 +196,52 @@ export class NextFederationPlugin {
       };
     }
 
+    if(hasAppDir) {
+      console.log("split chunks", compiler.options.optimization.splitChunks);
+      // configure splitting of next internals to prevent share duplication
+      if (!compiler.options.optimization.splitChunks) {
+
+        const regexToTest = new RegExp(Object.keys(RSC_SHARE_SCOPE).join("|"));
+
+        compiler.options.optimization.splitChunks = {
+          cacheGroups: {
+            sharedSplits: {
+              chunks: (chunk) => {
+                return chunk.runtime !== this._options.name
+              },
+              // test as regex
+              test: (module: NormalModule, chunks: Chunk[]) => {
+                // get files that contain next/dist in path
+                const isNextDist = module.resource && module.resource.includes("next/dist");
+                // exclude files that contain next/dist/build in path
+                const notNextDistBuild = module.resource && !module.resource.includes("next/dist/build");
+                // exclude files that contain next/dist/lib in path
+                const notNextDistLib = module.resource && !module.resource.includes("next/dist/lib");
+                // exclude files that contain pages in path
+                const notPages = module.resource && !module.resource.includes("pages");
+
+                if (isNextDist && notNextDistBuild && notNextDistLib && notPages) {
+                  return true;
+                }
+                return false;
+              },
+              name(module: Module, chunks: Chunk[], cacheGroupKey: string) {
+                const moduleFileName = module
+                  .identifier()
+                  .split("/")
+                  .reduceRight((item: string) => item);
+
+
+                const allChunksNames = chunks.map((item: Chunk) => item.name).join("~");
+                return `${cacheGroupKey}-${allChunksNames}-${moduleFileName}`;
+              },
+              enforce: true,
+              reuseExistingChunk: true
+            }
+          }
+        };
+      }
+    }
     // patch next
     // compiler.options.module.rules.push({
     //   test(request: string) {
