@@ -215,49 +215,43 @@ function getSharedModules(stats, federationPlugin) {
  * @returns {SharedModule[]}
  */
 function getMainSharedModules(stats) {
-  const chunks = stats.namedChunkGroups['main']
-    ? flatMap(stats.namedChunkGroups['main'].chunks, (c) =>
-        stats.chunks.filter((chunk) => chunk.id === c)
-      )
+  const chunkMap = stats.chunks.reduce((acc, chunk) => {
+    acc[chunk.id] = chunk;
+    return acc;
+  }, {});
+  const mainChunks = stats.namedChunkGroups['main']
+    ? stats.namedChunkGroups['main'].chunks
     : [];
+  const result = [];
+  const processedChunks = new Set();
 
-  return flatMap(chunks, (chunk) =>
-    flatMap(chunk.children, (id) =>
-      stats.chunks.filter(
-        (c) =>
-          c.id === id &&
-          c.files.length > 0 &&
-          c.modules.some((m) =>
-            searchIssuer(
-              m,
-              (issuer) => issuer?.startsWith('consume-shared-module')
-            )
-          )
-      )
-    )
-  )
-    .map((chunk) => ({
-      chunks: chunk.files.map(
-        (f) =>
-          `${stats.publicPath === 'auto' ? '' : stats.publicPath || ''}${f}`
-      ),
+  mainChunks.forEach((c) => {
+    const chunk = chunkMap[c];
+    if (!chunk || processedChunks.has(chunk.id)) return;
+
+    const childrenChunks = chunk.children
+      .map((id) => chunkMap[id])
+      .filter((c) => c && c.files.length > 0 && c.modules.some((m) => searchIssuer(m, (issuer) => issuer?.startsWith('consume-shared-module'))));
+    if (childrenChunks.length === 0) return;
+
+    result.push({
+      chunks: childrenChunks.map((c) => `${stats.publicPath === 'auto' ? '' : stats.publicPath || ''}${c.files[0]}`),
       provides: flatMap(
-        chunk.modules.filter((m) =>
-          searchIssuer(
-            m,
-            (issuer) => issuer?.startsWith('consume-shared-module')
-          )
+        childrenChunks.reduce((acc, c) => acc.concat(c.modules), []).filter((m) =>
+          searchIssuer(m, (issuer) => issuer?.startsWith('consume-shared-module'))
         ),
         (m) =>
-          getIssuers(
-            m,
-            (issuer) => issuer?.startsWith('consume-shared-module')
-          )
-      )
-        .map(parseFederatedIssuer)
-        .filter((f) => !!f),
-    }))
-    .filter((c) => c.provides.length > 0);
+          getIssuers(m, (issuer) => issuer?.startsWith('consume-shared-module'))
+            .map(parseFederatedIssuer)
+            .filter((f) => !!f)
+      ),
+    });
+
+    processedChunks.add(chunk.id);
+    childrenChunks.forEach((c) => processedChunks.add(c.id));
+  });
+
+  return result;
 }
 
 /**
@@ -392,3 +386,4 @@ class FederationStatsPlugin {
 }
 
 module.exports = FederationStatsPlugin;
+module.exports.getMainSharedModules = getMainSharedModules;
