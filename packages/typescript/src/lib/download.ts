@@ -1,10 +1,7 @@
 import fs from 'fs';
 import fetch from 'node-fetch';
 import path from 'path';
-import util from 'util';
-import { pipeline } from 'stream';
-
-const pipelineAsync = util.promisify(pipeline);
+import { pipeline } from 'stream/promises';
 
 export interface DownloadOptions {
   /**
@@ -46,7 +43,7 @@ export default async function download(options: DownloadOptions) {
     recursive: true,
   });
 
-  await pipelineAsync(
+  await pipeline(
     response.body,
     fs.createWriteStream(fileDest, {
       flags: 'w',
