@@ -1,16 +1,17 @@
-import React, { useEffect, useState } from 'react';
-const CheckoutTitle = () => {
-  const [hookData, setHookData] = useState('');
+Object.create(__webpack_share_scopes__.default);
+// import React, { useEffect, useState } from 'react';
+// const CheckoutTitle = () => {
+//   const [hookData, setHookData] = useState('');
+//
+//   useEffect(() => {
+//     setHookData('with hooks data');
+//   }, []);
+//
+//   return (
+//     <h3 className="title">
+//       This title came from <code>checkout</code> {hookData}!!!
+//     </h3>
+//   );
+// };
 
-  useEffect(() => {
-    setHookData('with hooks data');
-  }, []);
-
-  return (
-    <h3 className="title">
-      This title came from <code>checkout</code> {hookData}!!!
-    </h3>
-  );
-};
-
-export default CheckoutTitle;
+export default ()=>'test';

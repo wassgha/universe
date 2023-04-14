@@ -314,6 +314,11 @@ class ReadFileChunkLoadingRuntimeModule extends RuntimeModule {
                                 {} as Record<string, string>
                               )
                             )};`,
+                            `if(!global.__remote_scope__) {
+                              global.__remote_scope__ = {
+                                _config: {},
+                              }
+                            };`,
                             'Object.assign(global.__remote_scope__._config, remotes)',
                             'const remoteRegistry = global.__remote_scope__._config',
                             /*

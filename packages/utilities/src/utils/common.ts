@@ -137,7 +137,12 @@ export const importDelegatedModule = async (
               return () => result;
             });
           },
-          init: asyncContainer.init,
+          //@ts-ignore
+          init(initScope,initToken) {
+            console.log('in remote init', initScope);
+            //@ts-ignore
+            return asyncContainer.init(initScope,initToken);
+          }
         };
       } else {
         return asyncContainer;

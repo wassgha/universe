@@ -29,14 +29,14 @@ export default function patchDefaultSharedLoader(
       const name = sharedPackage[0];
       const params = sharedPackage[1];
       //@ts-ignore
-      if (params.eager === true) {
+      if (params.eager === true && !name.startsWith('hoist_')) {
         //@ts-ignore
         acc.scope += `
        ${JSON.stringify(name)}: {
          "0": {
           eager: true,
           loaded: true,
-          get: () => () => require(${JSON.stringify("!!" + name + "?pop")}),
+          get: () => Promise.resolve(() => require(${JSON.stringify("!!" + name + "?pop")})),
         }
         },`
         acc.sideload += `

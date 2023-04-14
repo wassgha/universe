@@ -94,6 +94,7 @@ export class NextFederationPlugin {
         console.warn('%c' + warnings.join('\n'), 'color: red');
       }
     }
+    compiler.options.devtool = 'source-map';
 
     if (isServer) {
 
@@ -111,6 +112,7 @@ export class NextFederationPlugin {
         runtime: 'webpack-runtime',
         eager: true,
         remotes: this._options.remotes,
+        shared: DEFAULT_SHARE_SCOPE
       }).apply(compiler);
       new StreamingTargetPlugin(this._options, {
         ModuleFederationPlugin: webpack.container.ModuleFederationPlugin,
@@ -142,9 +144,6 @@ export class NextFederationPlugin {
         };
       }
     } else {
-      compiler.options.plugins = compiler.options.plugins.filter((p: any) => {
-        return p.constructor.name === 'ReactFreshWebpackPlugin'
-      })
       const ModuleFederationPlugin = isServer
         ? require('@module-federation/node').NodeFederationPlugin
         : webpack.container.ModuleFederationPlugin;
@@ -161,6 +160,39 @@ export class NextFederationPlugin {
         remotes: this._options.remotes
       }).apply(compiler);
 
+      new AddModulesPlugin({
+        runtime: 'webpack',
+        eager: true,
+      }).apply(compiler);
+//@ts-ignore
+      compiler.options.optimization.splitChunks =false;
+      if(compiler.options.optimization.splitChunks) {
+        //@ts-ignore
+        delete compiler.options.optimization.splitChunks.cacheGroups.framework
+        //@ts-ignore
+        // const backup = compiler.options.optimization.splitChunks.cacheGroups.framework;
+        //@ts-ignore
+        // compiler.options.optimization.splitChunks.cacheGroups.framework = {
+        //   //@ts-ignore
+        //   ...backup,
+        //   test(module: any) {
+        //     const resource = module.nameForCondition?.()
+        //     //@ts-ignore
+        //     console.log(resource,backup.test(module));
+        //     //@ts-ignore
+        //     return backup.test(module);
+        //   },
+        // }
+//         compiler.options.optimization.splitChunks = {
+//           ...backup,
+//           chunks(chunk) {
+//             //@ts-ignore
+// console.log(chunk.name,backup.chunks(chunk));
+// // @ts-ignore
+// return backup.chunks(chunk);
+//           }
+//         }
+      }
 
       if (this._extraOptions.automaticPageStitching) {
         compiler.options.module.rules.push({
@@ -183,10 +215,13 @@ export class NextFederationPlugin {
       };
 
       // add hoist to main entry for sync avaliability.
-      new webpack.EntryPlugin(
-        compiler.context,
-        require.resolve('../internal-delegate-hoist'),
-        'main').apply(compiler);
+      // new webpack.EntryPlugin(
+      //   compiler.context,
+      //   require.resolve('../internal-delegate-hoist'),
+      //   'main').apply(compiler);
+    }
+    if(isServer) {
+      compiler.options.optimization.splitChunks = false;
     }
 
     const hostFederationPluginOptions: ModuleFederationPluginOptions = {
@@ -205,6 +240,10 @@ export class NextFederationPlugin {
       shared: {
         ...DEFAULT_SHARE_SCOPE,
         ...this._options.shared,
+        ['hoist_'+this._options.name]: {
+          eager: true,
+          import: require.resolve('../internal-delegate-hoist'),
+        }
       },
     };
 
@@ -365,7 +404,7 @@ export class NextFederationPlugin {
       }, {ModuleFederationPlugin}).apply(compiler);
     }
 
-    // new ChildFederationPlugin(this._options, this._extraOptions).apply(
+      // new ChildFederationPlugin(this._options, this._extraOptions).apply(
     //   compiler
     // );
     new AddRuntimeRequirementToPromiseExternal().apply(compiler);

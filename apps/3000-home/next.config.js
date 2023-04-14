@@ -23,9 +23,9 @@ const nextConfig = {
       // checkout: createDelegatedModule(require.resolve('./remote-delegate.js'), {
       //   remote: `checkout@http://localhost:3002/_next/static/${isServer ? 'ssr' : 'chunks'}/remoteEntry.js`,
       // }),
-      shop: `shop@http://localhost:3001/_next/static/${
-        isServer ? 'ssr' : 'chunks'
-      }/remoteEntry.js`,
+      // shop: `shop@http://localhost:3001/_next/static/${
+      //   isServer ? 'ssr' : 'chunks'
+      // }/remoteEntry.js`,
       checkout: `checkout@http://localhost:3002/_next/static/${
         isServer ? 'ssr' : 'chunks'
       }/remoteEntry.js`,
@@ -36,7 +36,7 @@ const nextConfig = {
         name: 'home_app',
         filename: 'static/chunks/remoteEntry.js',
         remotes: {
-          shop: remotes.shop,
+          // shop: remotes.shop,
           checkout: remotes.checkout,
         },
         exposes: {
@@ -44,8 +44,8 @@ const nextConfig = {
           './menu': './components/menu',
         },
         shared: {
-          lodash: {},
-          antd: {},
+          // lodash: {},
+          // antd: {},
         },
         extraOptions: {
           automaticAsyncBoundary: true,

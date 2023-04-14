@@ -38,48 +38,48 @@ export const DEFAULT_SHARE_SCOPE: SharedObject = {
     eager:true,
     import: false,
   },
-  'next/dynamic': {
-    eager:true,
-    requiredVersion: false,
-    singleton: true,
-    import: false
-  },
-  'styled-jsx': {
-    requiredVersion: false,
-    singleton: true,
-    import: false,
-    eager:true
-  },
-  'styled-jsx/style': {
-    requiredVersion: false,
-    singleton: true,
-    import: false,
-    eager: true
-  },
-  'next/link': {
-    requiredVersion: false,
-    singleton: true,
-    import: false,
-    eager: true
-  },
-  'next/router': {
-    requiredVersion: false,
-    singleton: true,
-    import: false,
-    eager:true,
-  },
-  'next/script': {
-    requiredVersion: false,
-    singleton: true,
-    import: false,
-    eager:true
-  },
-  'next/head': {
-    requiredVersion: false,
-    singleton: true,
-    import: false,
-    eager: true
-  },
+  // 'next/dynamic': {
+  //   eager:true,
+  //   requiredVersion: false,
+  //   singleton: true,
+  //   import: false
+  // },
+  // 'styled-jsx': {
+  //   requiredVersion: false,
+  //   singleton: true,
+  //   import: false,
+  //   eager:true
+  // },
+  // 'styled-jsx/style': {
+  //   requiredVersion: false,
+  //   singleton: true,
+  //   import: false,
+  //   eager: true
+  // },
+  // 'next/link': {
+  //   requiredVersion: false,
+  //   singleton: true,
+  //   import: false,
+  //   eager: true
+  // },
+  // 'next/router': {
+  //   requiredVersion: false,
+  //   singleton: true,
+  //   import: false,
+  //   eager:true,
+  // },
+  // 'next/script': {
+  //   requiredVersion: false,
+  //   singleton: true,
+  //   import: false,
+  //   eager:true
+  // },
+  // 'next/head': {
+  //   requiredVersion: false,
+  //   singleton: true,
+  //   import: false,
+  //   eager: true
+  // },
 };
 
 // put host in-front of any shared module key, so "hostreact"
@@ -211,6 +211,7 @@ export const removePlugins = [
   */
 export const parseRemotes = (remotes: Record<string, any>) =>
   Object.entries(remotes).reduce((acc, [key, value]) => {
+    console.log(remotes,value);
     // check if user is passing a internal "delegate module" reference
     if (value.startsWith('internal ') || value.startsWith('promise ')) {
       return { ...acc, [key]: value };

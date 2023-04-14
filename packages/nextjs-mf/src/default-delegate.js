@@ -1,11 +1,12 @@
-module.exports = new Promise(async (resolve, reject) => {
-  const { importDelegatedModule } = await import('@module-federation/utilities/src/utils/common')
 
+module.exports = new Promise(async (resolve, reject) => {
+  const { importDelegatedModule } = await import('@module-federation/utilities/src/utils/common');
   // eslint-disable-next-line no-undef
   const currentRequest = new URLSearchParams(__resourceQuery).get('remote');
-  const [global, url] = currentRequest.split('@');
+  const [containerName, url] = currentRequest.split('@');
+
   importDelegatedModule({
-    global,
+    global: containerName,
     url: url + '?' + Date.now(),
   })
     .then((remote) => {

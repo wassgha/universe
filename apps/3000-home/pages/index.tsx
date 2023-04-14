@@ -3,8 +3,8 @@ import Head from 'next/head';
 
 const CheckoutTitle = lazy(() => import('checkout/CheckoutTitle'));
 const ButtonOldAnt = lazy(() => import('checkout/ButtonOldAnt'), );
-const WebpackSvgRemote = lazy(() => import('shop/WebpackSvg') );
-const WebpackPngRemote = lazy(() => import('shop/WebpackPng'));
+// const WebpackSvgRemote = lazy(() => import('shop/WebpackSvg') );
+// const WebpackPngRemote = lazy(() => import('shop/WebpackPng'));
 
 const Home = () => {
   return (
@@ -107,9 +107,9 @@ const Home = () => {
               <img src="./webpack.png" />
             </td>
             <td>
-              <Suspense fallback="loading WebpackPngRemote">
-                <WebpackPngRemote />
-              </Suspense>
+              {/*<Suspense fallback="loading WebpackPngRemote">*/}
+              {/*  <WebpackPngRemote />*/}
+              {/*</Suspense>*/}
             </td>
           </tr>
           <tr>
@@ -123,9 +123,9 @@ const Home = () => {
               <img src="./webpack.svg" />
             </td>
             <td>
-              <Suspense fallback="loading WebpackSvgRemote">
-                <WebpackSvgRemote />
-              </Suspense>
+              {/*<Suspense fallback="loading WebpackSvgRemote">*/}
+              {/*  <WebpackSvgRemote />*/}
+              {/*</Suspense>*/}
             </td>
           </tr>
         </tbody>

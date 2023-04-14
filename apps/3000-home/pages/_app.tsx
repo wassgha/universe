@@ -12,30 +12,30 @@ function MyApp(props) {
   const { Component, pageProps } = props;
   const { asPath } = useRouter();
   const [MenuComponent, setMenuComponent] = useState(() => HostAppMenu);
-  const handleRouteChange = async (url) => {
-    if (url.startsWith('/shop')) {
-      // @ts-ignore
-      const RemoteAppMenu = (await import('shop/menu')).default;
-      setMenuComponent(() => RemoteAppMenu);
-    } else if (url.startsWith('/checkout')) {
-      // @ts-ignore
-      const RemoteAppMenu = (await import('checkout/menu')).default;
-      setMenuComponent(() => RemoteAppMenu);
-    } else {
-      setMenuComponent(() => HostAppMenu);
-    }
-  };
+  // const handleRouteChange = async (url) => {
+  //   if (url.startsWith('/shop')) {
+  //     // @ts-ignore
+  //     // const RemoteAppMenu = (await import('shop/menu')).default;
+  //     // setMenuComponent(() => RemoteAppMenu);
+  //   } else if (url.startsWith('/checkout')) {
+  //     // @ts-ignore
+  //     const RemoteAppMenu = (await import('checkout/menu')).default;
+  //     setMenuComponent(() => RemoteAppMenu);
+  //   } else {
+  //     setMenuComponent(() => HostAppMenu);
+  //   }
+  // };
   // handle first route hit.
-  React.useMemo(() => handleRouteChange(asPath), []);
+  // React.useMemo(() => handleRouteChange(asPath), []);
 
   //handle route change
-  React.useEffect(() => {
-    // Step 3: Subscribe on events
-    Router.events.on('routeChangeStart', handleRouteChange);
-    return () => {
-      Router.events.off('routeChangeStart', handleRouteChange);
-    };
-  }, []);
+  // React.useEffect(() => {
+  //   // Step 3: Subscribe on events
+  //   Router.events.on('routeChangeStart', handleRouteChange);
+  //   return () => {
+  //     Router.events.off('routeChangeStart', handleRouteChange);
+  //   };
+  // }, []);
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
