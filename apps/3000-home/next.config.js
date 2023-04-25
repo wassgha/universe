@@ -1,6 +1,6 @@
 const { withNx } = require('@nrwl/next/plugins/with-nx');
-const NextFederationPlugin = require('@module-federation/nextjs-mf');
 const { createDelegatedModule } = require('@module-federation/utilities');
+const NextFederationPlugin = require('@module-federation/nextjs-mf');
 
 /**
  * @type {import('@nrwl/next/plugins/with-nx').WithNxOptions}
@@ -41,7 +41,7 @@ const nextConfig = {
         filename: 'static/chunks/remoteEntry.js',
         remotes: {
           shop: remotes.shop,
-          checkout: remotes.checkout,
+          // checkout: remotes.checkout,
         },
         exposes: {
           './SharedNav': './components/SharedNav',
@@ -49,7 +49,7 @@ const nextConfig = {
         },
         shared: {
           // lodash: {},
-          // antd: {},
+          antd: {},
         },
         extraOptions: {
           automaticAsyncBoundary: true,

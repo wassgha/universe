@@ -8,7 +8,7 @@ import HostAppMenu from '../components/menu';
 
 import 'antd/dist/antd.css';
 
-const SharedNav = dynamic(() => import('home/SharedNav'), { ssr: true });
+// const SharedNav = dynamic(() => import('home/SharedNav'), { ssr: true });
 
 function MyApp({ Component, pageProps }) {
   const { asPath } = useRouter();
@@ -16,12 +16,12 @@ function MyApp({ Component, pageProps }) {
   const handleRouteChange = async (url) => {
     if (url.startsWith('/home') || url === '/') {
       // @ts-ignore
-      const RemoteAppMenu = (await import('home/menu')).default;
+      // const RemoteAppMenu = (await import('home/menu')).default;
       setMenuComponent(() => RemoteAppMenu);
     } else if (url.startsWith('/checkout')) {
       // @ts-ignore
-      const RemoteAppMenu = (await import('checkout/menu')).default;
-      setMenuComponent(() => RemoteAppMenu);
+      // const RemoteAppMenu = (await import('checkout/menu')).default;
+      // setMenuComponent(() => RemoteAppMenu);
     } else {
       setMenuComponent(() => HostAppMenu);
     }
@@ -40,7 +40,7 @@ function MyApp({ Component, pageProps }) {
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
-      <SharedNav />
+      {/*<SharedNav />*/}
       <Layout>
         <Layout.Sider width={200}>
           <MenuComponent />

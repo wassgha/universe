@@ -1,10 +1,10 @@
 import React, { Suspense, lazy } from 'react';
 import Head from 'next/head';
 
-const CheckoutTitle = lazy(() => import('checkout/CheckoutTitle'));
-const ButtonOldAnt = lazy(() => import('checkout/ButtonOldAnt'));
+// const CheckoutTitle = lazy(() => import('checkout/CheckoutTitle'));
+// const ButtonOldAnt = lazy(() => import('checkout/ButtonOldAnt'));
 const WebpackSvgRemote = lazy(() => import('shop/WebpackSvg'));
-const WebpackPngRemote = lazy(() => import('shop/WebpackPng'));
+// const WebpackPngRemote = lazy(() => import('shop/WebpackPng'));
 
 const Home = () => {
   return (
@@ -80,7 +80,7 @@ const Home = () => {
             </td>
             <td>
               <Suspense fallback="loading CheckoutTitle">
-                <CheckoutTitle />
+                {/*<CheckoutTitle />*/}
               </Suspense>
             </td>
           </tr>
@@ -92,7 +92,7 @@ const Home = () => {
             <td>[Button from antd@4.20.0]</td>
             <td>
               <Suspense fallback="loading ButtonOldAnt">
-                <ButtonOldAnt />
+                {/*<ButtonOldAnt />*/}
               </Suspense>
             </td>
           </tr>
@@ -108,7 +108,7 @@ const Home = () => {
             </td>
             <td>
               <Suspense fallback="loading WebpackPngRemote">
-                <WebpackPngRemote />
+                {/*<WebpackPngRemote />*/}
               </Suspense>
             </td>
           </tr>
