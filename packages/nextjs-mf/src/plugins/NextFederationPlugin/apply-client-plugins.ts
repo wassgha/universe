@@ -50,7 +50,7 @@ export function applyClientPlugins(
     shared: DEFAULT_SHARE_SCOPE_BROWSER,
     container: name,
     // @ts-ignore
-    applicationName: name,
+    // applicationName: name,
   }).apply(compiler);
 
   // If automatic page stitching is enabled, add a new rule to the compiler's module rules

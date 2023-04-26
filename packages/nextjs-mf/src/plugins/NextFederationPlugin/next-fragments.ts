@@ -48,7 +48,15 @@ export const retrieveDefaultShared = (isServer: boolean): SharedObject => {
   // If the code is running on the client/browser, always bundle Next.js internals
   return DEFAULT_SHARE_SCOPE_BROWSER;
 };
-
+export const retrieveInverseShared = (isServer: boolean): SharedObject => {
+  // If the code is running on the server, treat some Next.js internals as import false to make them external
+  // This is because they will be provided by the server environment and not by the remote container
+  if (isServer) {
+    return DEFAULT_SHARE_SCOPE;
+  }
+  // If the code is running on the client/browser, always bundle Next.js internals
+  return DEFAULT_SHARE_SCOPE_BROWSER;
+};
 /**
 
  Inject module hoisting system.

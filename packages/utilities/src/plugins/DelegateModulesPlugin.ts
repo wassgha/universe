@@ -106,6 +106,7 @@ class DelegateModulesPlugin {
     );
   }
 
+  //TODO: look at refactoring DelegateModulesPlugin, InvertedContainerPlugin, and AddRuntimeModulePlugin since they all share similar capabilieus
   resolveDelegateModules(compilation: Compilation): void {
     // Tap into the 'finish-modules' hook to access the module list after they are all processed
     compilation.hooks.finishModules.tapAsync(

@@ -1,5 +1,6 @@
 import DelegateModulesPlugin from '@module-federation/utilities/src/plugins/DelegateModulesPlugin';
-import { Chunk } from 'webpack';
+import { Chunk, Compilation } from 'webpack';
+
 /**
  * A webpack plugin that moves specified modules from chunks to runtime chunk.
  * @class AddModulesToRuntimeChunkPlugin
@@ -8,6 +9,7 @@ class AddModulesToRuntimeChunkPlugin {
   constructor(options) {
     this.options = { debug: false, ...options };
     this._delegateModules = new Set();
+    this._sharedModules = new Set();
   }
 
   getChunkByName(chunks, name) {
@@ -17,6 +19,38 @@ class AddModulesToRuntimeChunkPlugin {
       }
     }
     return undefined;
+  }
+
+  //TODO: look at refactoring DelegateModulesPlugin, InvertedContainerPlugin, and AddRuntimeModulePlugin since they all share similar capabilieus
+  resolveSharedModules(compilation) {
+    // Tap into the 'finish-modules' hook to access the module list after they are all processed
+    compilation.hooks.finishModules.tapAsync(
+      'ModuleIDFinderPlugin',
+      (modules, callback) => {
+        const { shared } = this.options;
+
+        if (shared) {
+          const shareKey = Object.keys(shared);
+
+          for (const module of modules) {
+            if (
+              shareKey.some((share) => {
+                if (module?.rawRequest === share) {
+                  return true;
+                } else if (share.endsWith('/')) {
+                  return module?.rawRequest?.startsWith(share);
+                } else {
+                  return false;
+                }
+              })
+            ) {
+              this._sharedModules.add(module);
+            }
+          }
+        }
+        callback();
+      }
+    );
   }
 
   /**
@@ -39,6 +73,70 @@ class AddModulesToRuntimeChunkPlugin {
     compiler.hooks.compilation.tap(
       'AddModulesToRuntimeChunkPlugin',
       (compilation) => {
+        if (isServer) return;
+        this.resolveSharedModules(compilation);
+        compilation.hooks.optimizeChunks.tap(
+          'AddModulesToRuntimeChunkPlugin',
+          (chunks) => {
+            const hostRuntime = chunks.find((chunk) => {
+              return (chunk.name || chunk.id) === runtime;
+            });
+
+            const remoteContainer = chunks.find((chunk) => {
+              return (chunk.name || chunk.id) === container;
+            });
+
+            const containerModules =
+              compilation.chunkGraph.getOrderedChunkModulesIterable(
+                remoteContainer
+              );
+            const providedModules = new Set();
+
+            for (const module of containerModules) {
+              if (
+                !compilation.chunkGraph.isModuleInChunk(module, hostRuntime)
+              ) {
+                if (module.type === 'provide-module') {
+                  providedModules.add(module._request);
+                  // compilation.chunkGraph.connectChunkAndModule(
+                  //   hostRuntime,
+                  //   module
+                  // );
+                  // compilation.chunkGraph.disconnectChunkAndModule(
+                  //   remoteContainer,
+                  //   module
+                  // );
+                  // continue;
+                }
+              }
+            }
+
+            for (const chunk of chunks) {
+              const chunkModules =
+                compilation.chunkGraph.getOrderedChunkModulesIterable(chunk);
+              for (const module of chunkModules) {
+                if (providedModules.has(module.request)) {
+                  compilation.chunkGraph.connectChunkAndModule(
+                    hostRuntime,
+                    module
+                  );
+                  compilation.chunkGraph.disconnectChunkAndModule(
+                    chunk,
+                    module
+                  );
+                  console.log(
+                    '#',
+                    module.request,
+                    '\n',
+                    module.rawRequest,
+                    '#'
+                  );
+                  // providedModules.add(module);
+                }
+              }
+            }
+          }
+        );
         return;
         // Tap into optimizeChunks hook
         compilation.hooks.optimizeChunks.tap(
@@ -141,6 +239,7 @@ class AddModulesToRuntimeChunkPlugin {
       }
     );
   }
+
   classifyModule(module, internalSharedModules, modulesToMove) {
     if (
       //TODO: do the same for shared modules, resolve them in the afterFinishModules hook

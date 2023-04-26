@@ -20,7 +20,8 @@ export default function patchDefaultSharedLoader(
   const eagerShared: EagerShared = buildEagerShared(shared);
 
   const shareScopes = buildShareScopes(eagerShared.scope);
-
+  //@ts-ignore
+  if (this._compiler.name !== 'server') return content;
   const result = [
     "console.log('initializing internal-module-hoist for:', __webpack_runtime_id__)",
     shareScopes,
