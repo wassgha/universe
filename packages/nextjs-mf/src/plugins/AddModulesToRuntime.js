@@ -1,6 +1,54 @@
 import DelegateModulesPlugin from '@module-federation/utilities/src/plugins/DelegateModulesPlugin';
 import { Chunk, Compilation } from 'webpack';
 
+const PLUGIN_NAME = 'AddDependenciesToMainChunkPlugin';
+
+class AddDependenciesToMainChunkPlugin {
+  apply(compiler) {
+    compiler.options.output.asyncEntrypoints = true;
+    compiler.options.output.asyncChunks = true;
+    compiler.hooks.compilation.tap(PLUGIN_NAME, (compilation) => {
+      // Listen to the additionalChunkAssets hook
+      compilation.hooks.additionalChunkAssets.tap(PLUGIN_NAME, () => {
+        // Find the "main" chunk
+        const mainChunk = compilation.namedChunks.get('main');
+        // move mainchunk array 0 to end of array
+        mainChunk.ids.splice(
+          mainChunk.ids.length - 1,
+          0,
+          mainChunk.ids.splice(0, 1)[0]
+        );
+
+        if (!mainChunk) {
+          return;
+        }
+
+        // Iterate over all chunks in the compilation
+        for (const chunk of compilation.chunks) {
+          // Skip the "main" chunk itself
+          if (chunk === mainChunk || chunk.hasRuntime()) {
+            continue;
+          }
+
+          if ((chunk.name || chunk.id).includes('react')) {
+            compilation.chunkGraph.connectChunkAndEntryModule(chunk, mainChunk);
+            // chunk.addParent(mainChunk);
+            // compilation.chunkGraph.addParent(mainChunk)
+          }
+          // chunk.parents.add(mainChunk);
+
+          // Check if the chunk meets the criteria for being added as a dependency
+          // For example, you can check the chunk name or other properties
+          if (true) {
+            // Add the chunk as a dependency of the "main" chunk
+            console.log('chunk', mainChunk);
+          }
+        }
+      });
+    });
+  }
+}
+
 /**
  * A webpack plugin that moves specified modules from chunks to runtime chunk.
  * @class AddModulesToRuntimeChunkPlugin
@@ -10,6 +58,7 @@ class AddModulesToRuntimeChunkPlugin {
     this.options = { debug: false, ...options };
     this._delegateModules = new Set();
     this._sharedModules = new Set();
+    this._eagerModules = new Set();
   }
 
   getChunkByName(chunks, name) {
@@ -69,8 +118,12 @@ class AddModulesToRuntimeChunkPlugin {
       remotes,
     }).apply(compiler);
 
+    if (!isServer) {
+      new AddDependenciesToMainChunkPlugin().apply(compiler);
+    }
+
     // Tap into compilation hooks
-    compiler.hooks.compilation.tap(
+    compiler.hooks.thisCompilation.tap(
       'AddModulesToRuntimeChunkPlugin',
       (compilation) => {
         if (isServer) return;
@@ -98,6 +151,7 @@ class AddModulesToRuntimeChunkPlugin {
               ) {
                 if (module.type === 'provide-module') {
                   providedModules.add(module._request);
+                  // compilation.chunkGraph.
                   // compilation.chunkGraph.connectChunkAndModule(
                   //   hostRuntime,
                   //   module
@@ -116,14 +170,17 @@ class AddModulesToRuntimeChunkPlugin {
                 compilation.chunkGraph.getOrderedChunkModulesIterable(chunk);
               for (const module of chunkModules) {
                 if (providedModules.has(module.request)) {
-                  compilation.chunkGraph.connectChunkAndModule(
-                    hostRuntime,
-                    module
-                  );
-                  compilation.chunkGraph.disconnectChunkAndModule(
-                    chunk,
-                    module
-                  );
+                  this._eagerModules.add(chunk);
+
+                  // compilation.chunkGraph.connectChunkAndModule(
+                  //   hostRuntime,
+                  //   module
+                  // );
+                  // compilation.chunkGraph.disconnectChunkAndModule(
+                  //   chunk,
+                  //   module
+                  // );
+
                   console.log(
                     '#',
                     module.request,
@@ -137,6 +194,29 @@ class AddModulesToRuntimeChunkPlugin {
             }
           }
         );
+        // compilation.hooks.afte.tap('AddDependencyChunkPlugin', () => {
+        // Create an additional chunk with the specified modules.
+        // const additionalChunk = compilation.addChunk(this.options.chunkName);
+        //
+        // for (const moduleName of this.options.modules) {
+        //   const module = compilation.modules.find(
+        //     (m) => m.rawRequest === moduleName
+        //   );
+        //   if (module) {
+        //     additionalChunk.addModule(module);
+        //     module.addChunk(additionalChunk);
+        //   }
+        // }
+
+        // Add the additional chunk as a dependency of the specified entry point.
+        const entrypoint = compilation.entrypoints.get('main');
+        if (entrypoint) {
+          this._eagerModules.forEach((chunk) => {
+            entrypoint.unshiftChunk(chunk);
+          });
+        }
+        // });
+
         return;
         // Tap into optimizeChunks hook
         compilation.hooks.optimizeChunks.tap(
