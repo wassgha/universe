@@ -61,8 +61,7 @@ class InvertedContainerRuntimeModule extends RuntimeModule {
     const container = this.compilation.entrypoints
       .get(this.options.container as string)
       ?.getRuntimeChunk?.();
-    const entryModule = container?.entryModule;
-    return entryModule;
+    return container;
   }
   /**
    * Generate method for the runtime module, producing the runtime code.
@@ -76,9 +75,12 @@ class InvertedContainerRuntimeModule extends RuntimeModule {
       (webpack && webpack.javascript.JavascriptModulesPlugin.chunkHasJs) ||
       require('webpack/lib/javascript/JavascriptModulesPlugin').chunkHasJs;
 
-    const containerEntryModule = this.resolveContainerModule();
+    const containerEntryModule = this.resolveContainerModule()?.entryModule;
+    const container = this.resolveContainerModule();
     const { chunkGraph, chunk } = this;
+    //@ts-ignore
 
+    //@ts-ignore
     const conditionMap = chunkGraph.getChunkConditionMap(chunk, chunkHasJs);
     // const hasJsMatcher = compileBooleanMatcher(conditionMap);
 
@@ -105,12 +107,12 @@ class InvertedContainerRuntimeModule extends RuntimeModule {
       return `
         if(typeof window === 'undefined') {
           ${globalObject}['__remote_scope__'] = ${globalObject}['__remote_scope__'] || {_config: {}};
-          if(!__webpack_require__.S.default) {
-__webpack_require__.S = __webpack_require__.S || global.webpackShareScope
-}
-console.log('in invert container', __webpack_require__(${JSON.stringify(
-        containerModuleId
-      )}))
+          // if(!__webpack_require__.S.default) {
+          //   __webpack_require__.S = __webpack_require__.S || global.webpackShareScope
+          //   }
+         global.__remote_scope__[${JSON.stringify(
+           container?.name
+         )}]  = __webpack_require__(${JSON.stringify(container?.name)});
         } else {
 
 
@@ -121,10 +123,7 @@ console.log('in invert container', __webpack_require__(${JSON.stringify(
         try {
         var containerAttachObject = typeof window !== 'undefined' ? window : ${globalObject}['__remote_scope__']
 
-        containerAttachObject[${JSON.stringify(
-          //@ts-ignore
-          containerName
-        )}] = __webpack_require__(${JSON.stringify(containerModuleId)})
+
         console.log('containerAttachObject', containerAttachObject)
 
       } catch (e) {

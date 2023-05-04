@@ -3,6 +3,7 @@ import { useState } from 'react';
 import App from 'next/app';
 import { Layout, version } from 'antd';
 import Router, { useRouter } from 'next/router';
+// import cc from 'checkout/CheckoutTitle';
 
 import SharedNav from '../components/SharedNav';
 import HostAppMenu from '../components/menu';

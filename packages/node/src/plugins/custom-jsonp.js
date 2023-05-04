@@ -129,15 +129,14 @@ global.exportCounter = global.exportCounter || {};
 global.exportCounter[fname] = global.exportCounter[fname] || 0;
 global.exportCounter[fname]++;
 //console.log('exportCounter', global.exportCounter);
-global.webpackShareScope = global.webpackShareScope  || __webpack_require__.S;
+
 var asyncInFlight = false;
- // console.log('PROM', prom);
- // console.log('pro', prom);
- // console.log(shareScopeMap);
-function asyncOperation(originalPush) {
-  if (global.hostInit) return global.hostInit;
+
+async function asyncOperation(originalPush) {
+
    console.log('[sharing]: checking/initializing');
-  global.hostInit = new Promise(function (resolve) {
+   console.log('[sharing]: initialized');
+  return new Promise(function (resolve) {
     var prom = __webpack_require__.I('default', [global.webpackShareScope]);
 console.log('webpackShareScope', global.webpackShareScope);
     // var prom = global.__remote_scope__[cnn].init(__webpack_require__.S.default);
@@ -147,11 +146,13 @@ console.log('webpackShareScope', global.webpackShareScope);
     // console.log('setting eager loading', lib[0], lib[1], cnn);
 
     });
+    setTimeout(function () {
     resolve(prom);
+    }, 11000);
   })
     .then(function () {
        loadDependencies(initialConsumes, cnn);
-      return Promise.all([...asyncQueue,global.__remote_scope__[cnn].get('./pages/index')])
+      return Promise.all([...asyncQueue])
     return global.__remote_scope__[cnn].get('./pages/index');
       console.log('init operation completed');
       loadDependencies(initialConsumes, cnn);

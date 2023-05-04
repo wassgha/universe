@@ -249,15 +249,13 @@ class ReadFileChunkLoadingRuntimeModule extends RuntimeModule {
           ])
         : '// no remote script loader needed',
       `
+
       if(${
         name === 'home_app'
       } && !__webpack_require__.S.default && global.__remote_scope__) {
       console.log('share scope is missing, trying to restore?', !!global.webpackShareScope);
       console.log('share scope missing, resetting containers');
 console.log('remoet scope',global.__remote_scope__);
-      global.__remote_scope__ = { _config: global.__remote_scope__._config, ${JSON.stringify(
-        name
-      )}: global.__remote_scope__['${JSON.stringify(name)}'] };
       global.hostInit = false;
 // __webpack_require__.S = __webpack_require__.S || global.webpackShareScope
 }
@@ -452,8 +450,6 @@ global.exportCounter[__filename]++;
           ])
         : '// no chunk loading',
       '',
-      // "console.log('starting share init in runtime');",
-      'if(!__webpack_require__.S)__webpack_require__.I("default",__webpack_require__.S);',
       withExternalInstallChunk
         ? Template.asString([
             'module.exports = __webpack_require__;',

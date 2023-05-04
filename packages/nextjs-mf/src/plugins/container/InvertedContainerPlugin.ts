@@ -105,10 +105,10 @@ class InvertedContainerPlugin {
                       'to',
                       chunk.name
                     );
-                  compilation.chunkGraph.connectChunkAndModule(
-                    chunk,
-                    containerEntryModule
-                  );
+                  // compilation.chunkGraph.connectChunkAndModule(
+                  //   chunk,
+                  //   containerEntryModule
+                  // );
                 }
               }
             }

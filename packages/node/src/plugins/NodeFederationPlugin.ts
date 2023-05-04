@@ -208,7 +208,7 @@ class NodeFederationPlugin {
     ) {
       compiler.options.output.chunkFilename = chunkFileName.replace(
         '.js',
-        `.[fullhash].js`
+        `.${this._options.name}.js`
       );
     }
 
