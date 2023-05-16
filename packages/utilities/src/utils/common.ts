@@ -140,11 +140,11 @@ export const loadScript = (keyOrRuntimeRemoteItem: string | RuntimeRemote) => {
   } else {
     // This casting is just to satisfy typescript,
     // In reality remoteGlobal will always be a string;
-    const remoteGlobal = reference.global as unknown as number;
+    const remoteGlobal = reference.global as unknown as string;
 
     // Check if theres an override for container key if not use remote global
     const containerKey = reference.uniqueKey
-      ? (reference.uniqueKey as unknown as number)
+      ? (reference.uniqueKey as unknown as string)
       : remoteGlobal;
 
     const __webpack_error__ = new Error() as Error & {
@@ -177,7 +177,7 @@ export const loadScript = (keyOrRuntimeRemoteItem: string | RuntimeRemote) => {
         return globalScope['remoteLoading'][containerKey];
       }
     }
-
+    // @ts-ignore
     asyncContainer = new Promise(function (resolve, reject) {
       function resolveRemoteGlobal() {
         const asyncContainer = globalScope[
@@ -219,6 +219,27 @@ export const loadScript = (keyOrRuntimeRemoteItem: string | RuntimeRemote) => {
         },
         containerKey
       );
+    }).catch(function (err) {
+      console.error('container is offline, returning fake remote');
+      console.error(err);
+
+      return {
+        fake: true,
+        // @ts-ignore
+        get: (arg) => {
+          console.log('faking', arg, 'module on, its offline');
+
+          return Promise.resolve(() => {
+            return {
+              __esModule: true,
+              default: () => {
+                return null;
+              },
+            };
+          });
+        },
+        init: () => {},
+      };
     });
     if (typeof window !== 'undefined') {
       globalScope['remoteLoading'][containerKey] = asyncContainer;
