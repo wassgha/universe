@@ -2,21 +2,20 @@ const readline = require('readline');
 const fs = require('fs');
 const path = require('path');
 const glob = require('glob');
-const { openai, completion } = require('./openai'); // Assuming openai.js is in the same directory
+const { openai, completion } = require('./services/openai'); // Assuming openai.js is in the same directory
 const {
   TemplateSystem,
-  CodeEditPromptTemplate,
-  CodeEditAnswerTemplate,
+  codeEditTemplate,
 } = require('./response-template/template-factory');
-
+const { model } = require('./constants');
 class FileProcessor {
   constructor() {
     this.chatHistory = [];
-    this.ignoredDirectories = ['node_modules', '.next', 'dist'];
+    // this.ignoredDirectories = ['node_modules', '.next', 'dist'];
+    this.ignoredDirectories = ['./gpt'];
     this.directoryTree = {};
     this.templateSystem = new TemplateSystem();
-    this.templateSystem.add('codeEditPrompt', new CodeEditPromptTemplate());
-    this.templateSystem.add('codeEditAnswer', new CodeEditAnswerTemplate());
+    // this.templateSystem.add('codeEditPrompt', codeEditPromptTemplate);
   }
 
   buildDirectoryTree(directoryPath, currentDirectory) {
@@ -24,7 +23,7 @@ class FileProcessor {
     for (const file of files) {
       const fullPath = path.join(directoryPath, file);
       const stats = fs.statSync(fullPath);
-      if (stats.isDirectory() && !this.ignoredDirectories.includes(file)) {
+      if (stats.isDirectory() && this.ignoredDirectories.includes(file)) {
         currentDirectory[file] = {};
         this.buildDirectoryTree(fullPath, currentDirectory[file]);
       } else if (stats.isFile()) {
@@ -42,17 +41,24 @@ class FileProcessor {
     }
   }
   async processFile(filePath) {
+    this.buildDirectoryTree(
+      path.join(process.cwd(), '../'),
+      this.directoryTree
+    );
     const content = fs.readFileSync(filePath, 'utf-8');
     const prompt = this.templateSystem.get('codeEditPrompt', {
       files: [{ name: filePath, content }],
       tasks: ['Edit the code'],
     });
-    let result = await completion({ prompt, max_tokens: 1000 });
+    console.log(this.directoryTree);
+    let result = await completion({ prompt, max_tokens: 1000, model });
     const parsedResult = JSON.parse(result);
-    const formattedResult = this.templateSystem.get('codeEditAnswer', {
-      files: parsedResult,
-    });
-    fs.writeFileSync(filePath + '.suggested.js', formattedResult);
+    console.log(parsedResult);
+    console.log(this.directoryTree);
+    // const formattedResult = this.templateSystem.get('codeEditAnswer', {
+    //   files: parsedResult,
+    // });
+    // fs.writeFileSync(filePath + '.suggested.js', formattedResult);
   }
 
   isTruncated(response) {

@@ -1,6 +1,6 @@
 // FileProcessor.test.js
 const fs = require('fs');
-const FileProcessor = require('./FileProcessor');
+const FileProcessor = require('./filev2');
 
 describe('FileProcessor', () => {
   let fileProcessor;
@@ -10,7 +10,7 @@ describe('FileProcessor', () => {
   });
 
   test('processFiles with OpenAI API', async () => {
-    const filePaths = ['./example.js']; // replace with your actual file paths
+    const filePaths = ['./sample/file-prompt.js']; // replace with your actual file paths
     await fileProcessor.processFiles(filePaths);
 
     filePaths.forEach((filePath) => {

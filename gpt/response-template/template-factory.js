@@ -1,6 +1,17 @@
-class CodeEditPromptTemplate {
-  apply({ files, tasks }) {
-    return `
+const { response } = require('../constants');
+
+class Template {
+  constructor(templateFunction) {
+    this.templateFunction = templateFunction;
+  }
+
+  apply(args) {
+    return this.templateFunction(args);
+  }
+}
+
+const codeEditTemplate = ({ files, tasks }) => {
+  return `
       Given the files provided, please perform the following tasks as needed:
       ${tasks.join('\n')}
       The files are as follows:
@@ -23,8 +34,7 @@ class CodeEditPromptTemplate {
       ]
       ${response.end}
     `;
-  }
-}
+};
 
 class TemplateSystem {
   constructor() {
@@ -36,7 +46,7 @@ class TemplateSystem {
         ({ command, args }) =>
           `Command: ${command}\nArguments: ${args.join(', ')}`
       ),
-      codeEditPrompt: new CodeEditPromptTemplate(),
+      codeEditPrompt: new Template(codeEditTemplate),
       // Add more templates as needed
     };
   }
@@ -49,6 +59,13 @@ class TemplateSystem {
   }
 
   add(templateName, templateFunction) {
+    console.log('Adding template:', templateName);
     this.templates[templateName] = new Template(templateFunction);
+    console.log('Templates:', this.templates);
   }
 }
+
+module.exports = {
+  TemplateSystem,
+  codeEditTemplate,
+};
