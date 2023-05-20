@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [1.7.6-rc.3](https://github.com/module-federation/nextjs-mf/compare/utils-1.7.6-rc.2...utils-1.7.6-rc.3) (2023-05-20)
+
+
+### Bug Fixes
+
+* externalization and missing runtime chunks ([#887](https://github.com/module-federation/nextjs-mf/issues/887)) ([c79cd62](https://github.com/module-federation/nextjs-mf/commit/c79cd6226d3134f1d6294cd8eba40c8c33af5cb5))
+
+
+
 ## [1.7.6-rc.4](https://github.com/module-federation/nextjs-mf/compare/utils-1.7.6-rc.3...utils-1.7.6-rc.4) (2023-05-18)
 
 
