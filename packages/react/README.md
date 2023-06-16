@@ -8,7 +8,6 @@ This library aims to make working with module federation in React seemless and n
 - Remote Logger Component
 - Event based logging
 - Console based debugging
-- Starter WebPack Configuration
 - Event Flags
 - Much More...
 
