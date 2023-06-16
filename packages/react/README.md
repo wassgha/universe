@@ -10,13 +10,7 @@ This library aims to make working with module federation in React seemless and n
 - Console based debugging
 - Starter WebPack Configuration
 - Event Flags
-- Full type support
-- Dependency free
-- Babel support with tree shaking
-
-## More Project Details
-- [Changelog](./changelog.md)
-- [Todo](./todo.md)
+- Much More...
 
 # Getting started
 
@@ -32,3 +26,7 @@ Next, Lets walk through using some of the features this library provides...
 - [Using the Hooks](./docs/using_hooks.md)
 - [Using the Hooks with Typescript](./docs/using_hooks_typescript.md)
 - [Logging and Debugging](./docs/logging_debugging.md)
+
+## More Project Details
+- [Changelog](./changelog.md)
+- [Todo](./todo.md)
