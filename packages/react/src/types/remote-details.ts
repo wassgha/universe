@@ -11,4 +11,4 @@ export type HostDetails = {
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type RemotComponent = ComponentType<any>;
+export type RemoteComponent = ComponentType<any>;

@@ -95,7 +95,7 @@ export default function useDynamicRemote<T>({
         .catch((error: Error) => {
             // Things did not work out fine, log and pass up the error.
             useEvents && emitEvent(RemoteEventType.FailedToImport, eventDetails);
-            verbose && logEvent(RemoteLogLevel.Error, `Error importing dynamic remote: ${remoteFullName}`, error as Error);
+            verbose && logEvent(RemoteLogLevel.Error, `Error importing dynamic remote: ${remoteFullName}`, error);
             
             // Return the result
             if (!useEvents) {

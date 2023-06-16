@@ -4,9 +4,9 @@ import { LogPrefix } from "../utilities/constants";
 
 export interface RemoteErrorBoundaryProps {
     children?: ReactNode;
+    fallback?: ReactNode;
     scope?: string;
     module?: string;
-    fallback?: ReactNode;
 };
 
 /** A remote specific error boundary that looks for specific remote events, and allows

@@ -6,9 +6,9 @@ Using a dynamically loaded remote:
 
 ```javascript
 import React, { Suspense } from "react";
-import { useDynamicRemote, RemotComponent, UseDynamicRemoteProps } from "@module-federation/react";
+import { useDynamicRemote, RemoteComponent, UseDynamicRemoteProps } from "@module-federation/react";
 
-type HomeRemoteProps = RemotComponent & {
+type HomeRemoteProps = RemoteComponent & {
     id: number;
 };
 
@@ -39,9 +39,9 @@ Using a eagerly loaded remote:
 
 ```javascript
 import React, { Suspense } from "react";
-import { useRemote, RemotComponent } from "@module-federation/react";
+import { useRemote, RemoteComponent } from "@module-federation/react";
 
-type HomeRemoteProps = RemotComponent & {
+type HomeRemoteProps = RemoteComponent & {
     id: number;
 };
 
