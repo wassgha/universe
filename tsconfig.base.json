@@ -24,7 +24,6 @@
       ],
       "@module-federation/nextjs-mf": ["packages/nextjs-mf/src/index.ts"],
       "@module-federation/node": ["packages/node/src/index.ts"],
-      "@module-federation/react": ["packages/react/src/index.ts"],
       "@module-federation/storybook-addon": [
         "packages/storybook-addon/src/index.ts"
       ],
