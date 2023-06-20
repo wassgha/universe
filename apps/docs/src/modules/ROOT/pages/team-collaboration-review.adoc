@@ -94,7 +94,7 @@ type MathModule = {
  * @async
  * @returns {Promise<void>}
  */
-async function useRemoteModule() {
+async function useEagerRemoteModule() {
   // Import the remote module using dynamic import
   const math = await import("math@http://localhost:3001/remoteEntry.js");
 

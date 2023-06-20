@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React from "react";
 import { RemoteEventType, RemoteEventDetails, RemoteLogLevel } from "../types/remote-events";
-import { UseRemoteProps } from "../types/remote-props";
+import { UseEagerRemoteProps } from "../types/remote-props";
 import { getRemoteNamespace } from "../utilities/federation";
 import { emitEvent, logEvent } from "../utilities/logger";
 
@@ -12,13 +12,13 @@ import { emitEvent, logEvent } from "../utilities/logger";
  * @param verbose Enable verbose console logging of activity.
  * @param useEvents Enable eventing of activity.
 */
-export default function useRemote<T>({
+export default function useEagerRemote<T>({
     scope,
     module,
     verbose,
     useEvents,
-}: UseRemoteProps): Promise<T> {
-    return new Promise((resolve, _) => {
+}: UseEagerRemoteProps): Promise<T | undefined> {
+    return new Promise((resolve, reject) => {
         // Define event details for reuse in the logger and error boundaries
         const remoteFullName = getRemoteNamespace(scope, module, '', '');
         const eventDetails = { scope, module, url: 'eager-loaded', detail: remoteFullName } as RemoteEventDetails;
@@ -42,7 +42,9 @@ export default function useRemote<T>({
             if (!useEvents) {
                 throw error;
             }
-            resolve(<></> as T);
+
+            // return nothing, let the events sort it out
+            return reject(undefined);
         }
     });
     

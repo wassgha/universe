@@ -39,7 +39,7 @@ Using a eagerly loaded remote:
 
 ```javascript
 import React, { Suspense } from "react";
-import { useRemote, RemoteComponent } from "@module-federation/react";
+import { useEagerRemote, RemoteComponent } from "@module-federation/react";
 
 type HomeRemoteProps = RemoteComponent & {
     id: number;
@@ -50,7 +50,7 @@ const remoteProps = {
     module: 'Application'
 };
 
-const HomeRemote = React.lazy(() => useRemote<{ default: HomeRemoteProps }>(remoteProps));
+const HomeRemote = React.lazy(() => useEagerRemote<{ default: HomeRemoteProps }>(remoteProps));
 
 export default () => {
     return (

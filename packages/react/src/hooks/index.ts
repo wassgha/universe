@@ -1,2 +1,3 @@
 export * from "./useDynamicRemote";
-export * from "./useRemote";
+export * from "./useDynamicModules";
+export * from "./useEagerRemote";

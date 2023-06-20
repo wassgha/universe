@@ -4,3 +4,5 @@ export const LogPrefix = '[module-federation]';
 export const DefaultContainerName = 'container';
 /** Default remote entry filename to search for when dynamically importing a remote */
 export const DefaultRemoteName = 'RemoteEntry.js';
+/** This is the string to put in the logs when no scope is supplied. */
+export const DefaultNoScope = 'ModuleOnly';

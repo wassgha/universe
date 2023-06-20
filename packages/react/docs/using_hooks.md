@@ -33,14 +33,14 @@ Using a eagerly loaded remote:
 
 ```javascript
 import React, { Suspense } from "react";
-import { useRemote } from "@module-federation/react";
+import { useEagerRemote } from "@module-federation/react";
 
 const remoteProps = {
     scope: 'remote_home',
     module: 'Application'
 };
 
-const HomeRemote = React.lazy(() => useRemote(remoteProps));
+const HomeRemote = React.lazy(() => useEagerRemote(remoteProps));
 
 export default () => {
     return (

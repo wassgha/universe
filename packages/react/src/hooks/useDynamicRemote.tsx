@@ -1,5 +1,5 @@
 import React from "react";
-import { importRemote } from "@module-federation/utilities";
+import { importRemote } from '@module-federation/utilities';
 import { checkUrlEnding } from "../utilities/url";
 import { RemoteEventType, RemoteEventDetails, RemoteLogLevel } from "../types/remote-events";
 import { UseDynamicRemoteProps } from "../types/remote-props";
@@ -26,7 +26,7 @@ export default function useDynamicRemote<T>({
     bustRemoteEntryCache,
     verbose,
     useEvents,
-}: UseDynamicRemoteProps): Promise<T> {
+}: UseDynamicRemoteProps): Promise<T | undefined> {
 
     /** Checks the values passed through props, and validate/set them if not set */
     const setDefaults = () => {
@@ -56,7 +56,7 @@ export default function useDynamicRemote<T>({
     /**
      * Executes the hook after some basic validation.
     */
-    const execute = (): Promise<T> => {
+    const execute = (): Promise<T | undefined> => {
         // Define event details for reuse in the logger and error boundaries
         const remoteFullName = getRemoteNamespace(scope, module, url, remoteEntryFileName);
         const eventDetails = { scope, module, url, detail: remoteFullName } as RemoteEventDetails;
@@ -101,8 +101,14 @@ export default function useDynamicRemote<T>({
             if (!useEvents) {
                 throw error;
             }
-            return (<></> as T);
+            // return nothing, let the events sort it out
+            return undefined;
         });
     }
 
+    // Set the defaults
+    setDefaults();
+
+    // Execute the import logic
+    return execute();
 }
