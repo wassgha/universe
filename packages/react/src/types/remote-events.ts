@@ -14,7 +14,8 @@ export enum RemoteLogLevel {
 
 export interface RemoteEventDetails {
     scope: string;
-    module: string;
+    module?: string;
+    modules?: string[];
     url: string;
     detail: string;
 }

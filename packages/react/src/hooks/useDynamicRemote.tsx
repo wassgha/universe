@@ -1,6 +1,6 @@
 import React from "react";
 import { importRemote } from "@module-federation/utilities";
-import { checkUrlEnding } from "../utilities/url-check";
+import { checkUrlEnding } from "../utilities/url";
 import { RemoteEventType, RemoteEventDetails, RemoteLogLevel } from "../types/remote-events";
 import { UseDynamicRemoteProps } from "../types/remote-props";
 import { DefaultRemoteName, LogPrefix } from "../utilities/constants";
@@ -54,7 +54,7 @@ export default function useDynamicRemote<T>({
     }
 
     /**
-     * Executes the dynamic import after some basic validation.
+     * Executes the hook after some basic validation.
     */
     const execute = (): Promise<T> => {
         // Define event details for reuse in the logger and error boundaries
@@ -104,10 +104,5 @@ export default function useDynamicRemote<T>({
             return (<></> as T);
         });
     }
-    
-    // Set the defaults
-    setDefaults();
 
-    // Execute the import logic
-    return execute();
 }
