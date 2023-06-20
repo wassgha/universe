@@ -11,6 +11,10 @@ This library aims to make working with module federation in React seemless and n
 - Event Flags
 - Much More...
 
+## Basic Concept
+
+![Anatomy of Host and Remotes](./images/Anatomy_of_Host_and_Remotes.jpg)
+
 # Getting started
 
 Adding Module Federation support to your existing or new react application is simple, just start by opening a terminal and installing the package.
