@@ -5,7 +5,7 @@ import { checkUrlEnding } from "../utilities/url";
 import { RemoteEventType, RemoteEventDetails, RemoteLogLevel } from "../types/remote-events";
 import { UseDynamicRemoteProps } from "../types/remote-props";
 import { DefaultRemoteName, LogPrefix } from "../utilities/constants";
-import { getRemoteNamespace } from "../utilities/federation";
+import { checkIfRemoteIsLoaded, getRemoteNamespace } from "../utilities/federation";
 import { emitEvent, logEvent } from "../utilities/logger";
 import { isBundlerAvailable } from "../utilities/bundlers";
 
@@ -46,15 +46,6 @@ export default function useDynamicRemote<T>({
     };
 
     /**
-     * Check if the remote has already been loaded, saving us a script append.
-    */
-    const checkIfRemoteIsLoaded = () => {
-        const remoteScope = scope as unknown as number;
-        const container = (window[remoteScope] as unknown as WebpackRemoteContainer);
-        return (container !== undefined);
-    }
-
-    /**
      * Executes the hook after some basic validation.
     */
     const execute = (): Promise<T | undefined> => {
@@ -71,13 +62,15 @@ export default function useDynamicRemote<T>({
                 throw new Error(`${LogPrefix} Error: Bundler not found. Cannot import a dynamic remote.`);
             }
         }
+
         // Lets check to see if its already loaded, saving us a script append
-        if (checkIfRemoteIsLoaded()) {
+        if (checkIfRemoteIsLoaded(scope)) {
             const remote = useDynamicModule<T>({ url, module, remoteEntryFileName });
             useEvents && emitEvent(RemoteEventType.LazyLoaded, eventDetails);
             verbose && logEvent(RemoteLogLevel.Information, `Lazy Loaded dynamic remote: ${remoteFullName}`);
             return remote;
         }
+        
         // Return the module, but lets also log the events for capture.
         return importRemote<T>({
             url: checkUrlEnding(url),

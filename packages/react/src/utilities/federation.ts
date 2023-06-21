@@ -1,3 +1,4 @@
+import { WebpackRemoteContainer } from "@module-federation/utilities";
 import { DefaultRemoteName } from "./constants";
 import { checkUrlEnding } from "./url";
 
@@ -12,4 +13,11 @@ export const getRemoteNamespace = (scope: string, module: string | string[], url
     const remoteName = stringNullCheck(remoteEntryFileName) ? DefaultRemoteName : remoteEntryFileName;
     const moduleString = Array.isArray(module) ? module.join(',') : module;
     return `${scope}:${moduleString}@${formattedUrl}/${remoteName}`;
+}
+
+/** Check if the remote has already been loaded, saving us a script append. */
+export const checkIfRemoteIsLoaded = (scope: string) => {
+    const remoteScope = scope as unknown as number;
+    const container = (window[remoteScope] as unknown as WebpackRemoteContainer);
+    return (container !== undefined);
 }
