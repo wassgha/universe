@@ -20,6 +20,6 @@ export interface RemoteEventDetails {
     detail: string;
 }
 
-export type RemotCustomEvent = CustomEvent & {
+export type RemoteCustomEvent = CustomEvent & {
     // TODO: Fill this in.
 }

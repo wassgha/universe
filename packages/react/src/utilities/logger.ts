@@ -18,6 +18,21 @@ export const logEvent = (logLevel: RemoteLogLevel, message: string, error?: Erro
     }
 };
 
+/** Logging extension for info messages to console */
+export const logInformation = (message: string) => {
+    console.info(`${LogPrefix} ${message}`);
+}
+
+/** Logging extension for warning messages to console */
+export const logWarning = (message: string) => {
+    console.warn(`${LogPrefix} ${message}`);
+}
+
+/** Logging extension for error messages to console */
+export const logError = (message: string, error: Error) => {
+    console.error(`${LogPrefix} ${message}`, error);
+}
+
 /** Window event extension which simply standardizes the format and structure */
 export const emitEvent = (eventType: RemoteEventType, details: RemoteEventDetails) => {
     window.dispatchEvent(new CustomEvent(`${LogPrefix} Event: ${eventType}`, details));

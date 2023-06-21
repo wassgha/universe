@@ -1,5 +1,5 @@
 import React from "react";
-import { importRemote } from '@module-federation/utilities';
+import { WebpackRemoteContainer, importRemote } from '@module-federation/utilities';
 import useDynamicModule from './useDynamicModule';
 import { checkUrlEnding } from "../utilities/url";
 import { RemoteEventType, RemoteEventDetails, RemoteLogLevel } from "../types/remote-events";
@@ -49,9 +49,9 @@ export default function useDynamicRemote<T>({
      * Check if the remote has already been loaded, saving us a script append.
     */
     const checkIfRemoteIsLoaded = () => {
-        // TODO: Replace this with a typed container check
-        // @ts-ignore
-        return (window[scope] !== undefined);
+        const remoteScope = scope as unknown as number;
+        const container = (window[remoteScope] as unknown as WebpackRemoteContainer);
+        return (container !== undefined);
     }
 
     /**
