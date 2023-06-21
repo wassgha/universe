@@ -29,6 +29,7 @@ Next, Lets walk through using some of the features this library provides...
 - [Using the Hooks](./docs/using_hooks.md)
 - [Using the Hooks with Typescript](./docs/using_hooks_typescript.md)
 - [Logging and Debugging](./docs/logging_debugging.md)
+- [Using the Event System](./docs/using_the_events.md)
 
 ## More Project Details
 - [Changelog](./changelog.md)
