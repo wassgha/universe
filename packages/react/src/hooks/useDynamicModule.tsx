@@ -7,14 +7,14 @@ import { getRemoteNamespace } from '../utilities/federation';
 import { emitEvent, logEvent } from '../utilities/logger';
 
 /**
- * Dynamically imports a single modules from a remote
+ * Dynamically imports a single module from a remote
  * @param url Url to the remote we want to import.
  * @param module Which itemsfrom the exports collection to return.
  * @param remoteEntryFileName The name of the remote entry file. Usually RemoteEntry.js or Remote.js.
  * @param verbose Enable verbose console logging of activity.
  * @param useEvents Enable eventing of activity.
 */
-export default function UseDynamicModule<T>({
+export default function useDynamicModule<T>({
   url,
   module,
   remoteEntryFileName,

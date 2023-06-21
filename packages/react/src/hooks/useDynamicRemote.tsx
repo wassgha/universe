@@ -1,5 +1,6 @@
 import React from "react";
 import { importRemote } from '@module-federation/utilities';
+import useDynamicModule from './useDynamicModule';
 import { checkUrlEnding } from "../utilities/url";
 import { RemoteEventType, RemoteEventDetails, RemoteLogLevel } from "../types/remote-events";
 import { UseDynamicRemoteProps } from "../types/remote-props";
@@ -48,9 +49,9 @@ export default function useDynamicRemote<T>({
      * Check if the remote has already been loaded, saving us a script append.
     */
     const checkIfRemoteIsLoaded = () => {
-        // TODO: Fix the underlining logic that this triggers if it evals to true
-        return false;
-        // return (window[scope] !== undefined);
+        // TODO: Replace this with a typed container check
+        // @ts-ignore
+        return (window[scope] !== undefined);
     }
 
     /**
@@ -72,11 +73,10 @@ export default function useDynamicRemote<T>({
         }
         // Lets check to see if its already loaded, saving us a script append
         if (checkIfRemoteIsLoaded()) {
-            // @ts-ignore
-            const remote = window[scope].get(`./${module}`);
+            const remote = useDynamicModule<T>({ url, module, remoteEntryFileName });
             useEvents && emitEvent(RemoteEventType.LazyLoaded, eventDetails);
             verbose && logEvent(RemoteLogLevel.Information, `Lazy Loaded dynamic remote: ${remoteFullName}`);
-            return remote as unknown as Promise<T>;
+            return remote;
         }
         // Return the module, but lets also log the events for capture.
         return importRemote<T>({
